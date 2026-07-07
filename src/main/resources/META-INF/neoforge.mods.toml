@@ -1,0 +1,45 @@
+## ============================================================
+## neoforge.mods.toml — Métadonnées du mod Rolynk Mod Menu
+## ============================================================
+
+modLoader   = "javafml"
+loaderVersion = "[4,)"
+license     = "MIT"
+
+# (Optionnel) URL du tracker de bugs
+# issueTrackerURL = "https://github.com/xxbee/rolynk-tabplayers/issues"
+
+[[mods]]
+    modId       = "rolynk_mod_menu"
+    version     = "1.0.0"
+    displayName = "Rolynk Mod Menu"
+    logoFile  = "rolynk_mod_menu.png"
+    description = '''
+Rolynk Mod Menu for Minecraft.
+    '''
+
+## ---- Dépendances ------------------------------------------------
+
+[[dependencies.rolynk_mod_menu]]
+    modId        = "neoforge"
+    type         = "required"
+    versionRange = "[21.1.143,)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies.rolynk_mod_menu]]
+    modId        = "minecraft"
+    type         = "required"
+    versionRange = "[1.21.1,)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+# Intégration optionnelle : système de cartes (boosters de récompense playtime).
+# "optional" → ce mod fonctionne sans ; l'appel se fait par réflexion (BoosterIntegration).
+# "AFTER" → rolynk_cards est chargé avant nous quand il est présent.
+[[dependencies.rolynk_mod_menu]]
+    modId        = "rolynk_cards"
+    type         = "optional"
+    versionRange = "[1.0.0,)"
+    ordering     = "AFTER"
+    side         = "BOTH"

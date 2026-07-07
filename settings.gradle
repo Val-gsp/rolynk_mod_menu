@@ -1,0 +1,16 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven {
+            name = 'NeoForged'
+            url = 'https://maven.neoforged.net/releases'
+        }
+    }
+}
+
+// Note : le plugin foojay est optionnel (résolution automatique du JDK).
+// Retiré car il peut causer des erreurs réseau. Java 21 est détecté
+// automatiquement depuis JAVA_HOME ou le PATH.
+
+rootProject.name = 'rolynktabplayers'

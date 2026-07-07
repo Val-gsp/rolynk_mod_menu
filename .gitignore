@@ -1,0 +1,21 @@
+# Build
+build/
+.gradle/
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# NeoForge / Minecraft run dirs
+run/
+runs/
+
+# Donnees sensibles — NE JAMAIS commiter
+config/rolynk_db.properties
+
+# Logs
+logs/
+*.log
