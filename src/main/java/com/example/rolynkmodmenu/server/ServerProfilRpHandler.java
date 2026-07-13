@@ -110,13 +110,20 @@ public final class ServerProfilRpHandler {
 
     /** @return message d'erreur, ou null si tous les champs sont valides. */
     private static String valider(ProfilRpCreatePayload p) {
-        if (!InputValidator.isValidRpTexte(p.nom()))           return "Nom invalide (1-32 lettres).";
-        if (!InputValidator.isValidRpTexte(p.prenom()))        return "Prénom invalide (1-32 lettres).";
-        if (!InputValidator.isValidSexe(p.sexe()))             return "Sexe invalide.";
-        if (!InputValidator.isValidRpTaille(p.taille()))       return "Taille invalide (ex : 1m80).";
-        if (!InputValidator.isValidRpTexte(p.ancienneVille())) return "Ancienne ville invalide (1-32 lettres).";
-        if (!InputValidator.isValidRpTexte(p.metier()))        return "Métier invalide (1-32 lettres).";
-        if (!InputValidator.isValidRpDescription(p.description())) return "Description invalide (1-256 caractères).";
+        if (!InputValidator.isValidRpTexte(p.nom()))
+            return "Nom : première lettre en MAJUSCULE (1-32 lettres).";
+        if (!InputValidator.isValidRpTexte(p.prenom()))
+            return "Prénom : première lettre en MAJUSCULE (1-32 lettres).";
+        if (!InputValidator.isValidSexe(p.sexe()))
+            return "Sexe invalide.";
+        if (!InputValidator.isValidRpTaille(p.taille()))
+            return "Taille : format chiffre + m + nombre (ex : 1m80).";
+        if (!InputValidator.isValidRpTexte(p.ancienneVille()))
+            return "Ancienne ville : première lettre en MAJUSCULE (1-32 lettres).";
+        if (!InputValidator.isValidRpTexte(p.metier()))
+            return "Métier : première lettre en MAJUSCULE (1-32 lettres).";
+        if (!InputValidator.isValidRpDescription(p.description()))
+            return "Description : MAJUSCULE au début, 50 caractères max.";
         return null;
     }
 }

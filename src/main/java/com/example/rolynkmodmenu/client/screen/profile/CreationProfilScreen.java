@@ -33,6 +33,9 @@ public class CreationProfilScreen extends BaseMenuScreen {
 
     private static final String[] SEXES = {"Homme", "Femme", "Autre"};
 
+    /** Longueur maximale de la description (avec compteur affiché). */
+    private static final int DESC_MAX = 50;
+
     private EditBox nomInput, prenomInput, tailleInput, ancienneVilleInput, metierInput, descriptionInput;
     private int sexeIndex = 0;
 
@@ -81,7 +84,7 @@ public class CreationProfilScreen extends BaseMenuScreen {
         tailleInput        = champ(col2X(),    rowY(1) + 10, cw, "ex : 1m80", 16);
         ancienneVilleInput = champ(contentX(), rowY(2) + 10, cw, "Ancienne ville", 32);
         metierInput        = champ(col2X(),    rowY(2) + 10, cw, "Métier", 32);
-        descriptionInput   = champ(contentX(), rowY(3) + 10, contentW(), "Décris ton personnage...", 256);
+        descriptionInput   = champ(contentX(), rowY(3) + 10, contentW(), "Décris ton personnage...", 50);
 
         setFocused(nomInput);
         nomInput.setFocused(true);
@@ -119,6 +122,13 @@ public class CreationProfilScreen extends BaseMenuScreen {
         label(gfx, "ANCIENNE VILLE", cx, rowY(2));
         label(gfx, "MÉTIER", col2X(), rowY(2));
         label(gfx, "DESCRIPTION DU PERSONNAGE", cx, rowY(3));
+
+        // Compteur de caractères de la description : « 11/50 »
+        int descLen = descriptionInput != null ? descriptionInput.getValue().length() : 0;
+        String compteur = descLen + "/" + DESC_MAX;
+        int compteurCol = descLen >= DESC_MAX ? 0xFFFF5555
+                        : descLen >= DESC_MAX - 10 ? C_VILLE : C_LABEL;
+        gfx.drawString(font, compteur, cx + cw - font.width(compteur), rowY(3), compteurCol, false);
 
         // Bouton cyclique Sexe (même gabarit que les champs)
         sexeBtnX = cx; sexeBtnY = rowY(1) + 10; sexeBtnW = colw;
@@ -205,10 +215,35 @@ public class CreationProfilScreen extends BaseMenuScreen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
+    /**
+     * Validation locale (miroir des règles serveur) pour un retour immédiat :
+     * première lettre en majuscule (nom, prénom, ancienne ville, métier,
+     * description), taille au format chiffre + m + nombre, description ≤ 50.
+     * @return message d'erreur ciblé, ou null si tout est valide.
+     */
+    private String validerLocal() {
+        if (!majusculeInitiale(nomInput))           return "NOM : première lettre en MAJUSCULE.";
+        if (!majusculeInitiale(prenomInput))        return "PRÉNOM : première lettre en MAJUSCULE.";
+        String t = tailleInput.getValue().trim();
+        if (!t.matches("[0-9]m[0-9]{1,2}"))         return "TAILLE : format 1m80 (chiffre + m + nombre).";
+        if (!majusculeInitiale(ancienneVilleInput)) return "ANCIENNE VILLE : première lettre en MAJUSCULE.";
+        if (!majusculeInitiale(metierInput))        return "MÉTIER : première lettre en MAJUSCULE.";
+        if (!majusculeInitiale(descriptionInput))   return "DESCRIPTION : première lettre en MAJUSCULE.";
+        if (descriptionInput.getValue().trim().length() > DESC_MAX)
+                                                    return "DESCRIPTION : " + DESC_MAX + " caractères maximum.";
+        return null;
+    }
+
+    private static boolean majusculeInitiale(EditBox b) {
+        String v = b.getValue().trim();
+        return !v.isEmpty() && Character.isUpperCase(v.charAt(0));
+    }
+
     private void doValider() {
         if (!champsRemplis() || envoiEnCours) return;
+        erreur = validerLocal();
+        if (erreur != null) return;
         envoiEnCours = true;
-        erreur = null;
         PacketDistributor.sendToServer(new ProfilRpCreatePayload(
                 nomInput.getValue().trim(),
                 prenomInput.getValue().trim(),

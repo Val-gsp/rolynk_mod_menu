@@ -64,17 +64,17 @@ public final class InputValidator {
 
     // ── Profil RP ──────────────────────────────────────────────────────────────
 
-    /** Texte court RP (nom, prénom, ville, métier) : lettres/chiffres/espaces. */
+    /** Texte court RP (nom, prénom, ville, métier) : PREMIÈRE LETTRE MAJUSCULE obligatoire. */
     private static final Pattern RP_TEXTE =
-            Pattern.compile("^[\\p{L}0-9 '\\-]{1,32}$");
+            Pattern.compile("^\\p{Lu}[\\p{L}0-9 '\\-]{0,31}$");
 
-    /** Taille RP (ex : "1m80", "180 cm"). */
+    /** Taille RP : strictement chiffre + m + nombre (ex : "1m80", "2m01"). */
     private static final Pattern RP_TAILLE =
-            Pattern.compile("^[\\p{L}0-9 ,.'\\-]{1,16}$");
+            Pattern.compile("^[0-9]m[0-9]{1,2}$");
 
-    /** Description RP : texte libre court, sans codes couleur ni caractères de contrôle. */
+    /** Description RP : majuscule initiale, 50 caractères max, sans codes couleur. */
     private static final Pattern RP_DESCRIPTION =
-            Pattern.compile("^[\\p{L}0-9 ,.!?:;()'\"\\-]{1,256}$");
+            Pattern.compile("^\\p{Lu}[\\p{L}0-9 ,.!?:;()'\"\\-]{0,49}$");
 
     /** Valeurs de sexe proposées par le formulaire (bouton cyclique côté client). */
     public static final Set<String> VALID_SEXES = Set.of("Homme", "Femme", "Autre");
