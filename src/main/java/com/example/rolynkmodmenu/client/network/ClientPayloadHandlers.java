@@ -5,6 +5,7 @@ import com.example.rolynkmodmenu.client.boutique.BoutiqueDataManager;
 import com.example.rolynkmodmenu.client.grade.GradeCache;
 import com.example.rolynkmodmenu.client.profile.ProfileDataManager;
 import com.example.rolynkmodmenu.client.profile.ProfilJoueurDataManager;
+import com.example.rolynkmodmenu.client.profile.ProfilRpDataManager;
 import com.example.rolynkmodmenu.client.recompense.RecompensesDataManager;
 import com.example.rolynkmodmenu.client.screen.ville.GestionVilleScreen;
 import com.example.rolynkmodmenu.client.ville.*;
@@ -40,6 +41,25 @@ public final class ClientPayloadHandlers {
         ctx.enqueueWork(() -> {
             ProfilJoueurDataManager.handleS2C(payload);
             GradeCache.setGrade(payload.pseudo(), payload.grade());
+        });
+    }
+
+    /**
+     * Profil RP du joueur connecté. Si absent (première connexion), le data
+     * manager lève {@code creationRequise} — ClientGameEvents ouvrira l'écran
+     * « Création Profil RP » dès que le joueur sera en jeu.
+     */
+    public static void onProfilRp(ProfilRpPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> ProfilRpDataManager.handleS2C(payload));
+    }
+
+    /** Résultat de la création du profil RP → transmis à l'écran s'il est ouvert. */
+    public static void onProfilRpResult(ProfilRpResultPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (Minecraft.getInstance().screen
+                    instanceof com.example.rolynkmodmenu.client.screen.profile.CreationProfilScreen s) {
+                s.onResultat(payload.ok(), payload.message());
+            }
         });
     }
 

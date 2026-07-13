@@ -62,6 +62,23 @@ public final class InputValidator {
     /** Grades de ville valides. */
     public static final Set<String> VALID_GRADES = Set.of("Membre", "Adjoint", "Chef");
 
+    // ── Profil RP ──────────────────────────────────────────────────────────────
+
+    /** Texte court RP (nom, prénom, ville, métier) : lettres/chiffres/espaces. */
+    private static final Pattern RP_TEXTE =
+            Pattern.compile("^[\\p{L}0-9 '\\-]{1,32}$");
+
+    /** Taille RP (ex : "1m80", "180 cm"). */
+    private static final Pattern RP_TAILLE =
+            Pattern.compile("^[\\p{L}0-9 ,.'\\-]{1,16}$");
+
+    /** Description RP : texte libre court, sans codes couleur ni caractères de contrôle. */
+    private static final Pattern RP_DESCRIPTION =
+            Pattern.compile("^[\\p{L}0-9 ,.!?:;()'\"\\-]{1,256}$");
+
+    /** Valeurs de sexe proposées par le formulaire (bouton cyclique côté client). */
+    public static final Set<String> VALID_SEXES = Set.of("Homme", "Femme", "Autre");
+
     /** Modes de recrutement valides (doit correspondre aux constantes VilleStore). */
     public static final Set<String> VALID_REC = Set.of(
             VilleStore.RECRUTEMENT_OUVERT,
@@ -105,6 +122,26 @@ public final class InputValidator {
     /** Action ville : doit figurer dans la whitelist {@code VALID_ACTIONS}. */
     public static boolean isValidAction(String s) {
         return s != null && VALID_ACTIONS.contains(s);
+    }
+
+    /** Texte court de profil RP (nom, prénom, ancienne ville, métier). */
+    public static boolean isValidRpTexte(String s) {
+        return s != null && RP_TEXTE.matcher(s.trim()).matches();
+    }
+
+    /** Taille de personnage RP. */
+    public static boolean isValidRpTaille(String s) {
+        return s != null && RP_TAILLE.matcher(s.trim()).matches();
+    }
+
+    /** Description de personnage RP. */
+    public static boolean isValidRpDescription(String s) {
+        return s != null && RP_DESCRIPTION.matcher(s.trim()).matches();
+    }
+
+    /** Sexe : "Homme", "Femme" ou "Autre" uniquement. */
+    public static boolean isValidSexe(String s) {
+        return s != null && VALID_SEXES.contains(s.trim());
     }
 
     /** Grade ville : "Membre", "Adjoint" ou "Chef" uniquement. */

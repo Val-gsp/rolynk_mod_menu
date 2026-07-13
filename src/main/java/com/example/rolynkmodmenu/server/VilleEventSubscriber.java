@@ -104,6 +104,10 @@ public final class VilleEventSubscriber {
 
             // Envoi du profil complet au client (version login = met à jour le status)
             ServerProfileHandler.sendProfileOnLogin(sp);
+
+            // Envoi du profil RP — si absent (première connexion), le client
+            // ouvre automatiquement l'écran « Création Profil RP ».
+            ServerProfilRpHandler.sendProfilRp(sp);
         }, BaliseStore.DB_EXECUTOR);
     }
 
@@ -115,6 +119,7 @@ public final class VilleEventSubscriber {
         VilleCommandHandler.onPlayerLogout(sp);
         ServerVilleHandler.onPlayerLogout(sp.getUUID());
         ServerProfileHandler.onPlayerLogout(sp.getUUID());
+        ServerProfilRpHandler.onPlayerLogout(sp.getUUID());
         ServerBaliseHandler.onPlayerLogout(sp.getUUID());
         ServerRecompenseHandler.onPlayerLogout(sp.getUUID());
         ServerBoutiqueHandler.onPlayerLogout(sp.getUUID());

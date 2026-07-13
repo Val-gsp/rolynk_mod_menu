@@ -2,9 +2,11 @@ package com.example.rolynkmodmenu.client.screen.profile;
 
 import com.example.rolynkmodmenu.client.grade.GradeCache;
 import com.example.rolynkmodmenu.client.profile.ProfileDataManager;
+import com.example.rolynkmodmenu.client.profile.ProfilRpDataManager;
 import com.example.rolynkmodmenu.client.screen.BaseMenuScreen;
 import com.example.rolynkmodmenu.client.util.GuiUtils;
 import com.example.rolynkmodmenu.network.ProfileRequestPayload;
+import com.example.rolynkmodmenu.network.ProfilRpRequestPayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,9 +40,13 @@ public class ProfileScreen extends BaseMenuScreen {
 
     private final Screen previousScreen;
 
-    // Zones des boutons RETOUR et TRADE (calculées au rendu)
+    /** false = Stats serveur, true = Profil RP. */
+    private boolean vueRp = false;
+
+    // Zones des boutons RETOUR, TRADE et bascule Stats/RP (calculées au rendu)
     private int retourBtnX, retourBtnY, retourBtnW;
     private int tradeBtnX, tradeBtnY, tradeBtnW;
+    private int rpBtnX, rpBtnY, rpBtnW;
 
     public ProfileScreen(Screen previous) {
         super("MENU", "PROFIL");
@@ -53,8 +59,10 @@ public class ProfileScreen extends BaseMenuScreen {
 
     @Override
     protected void initContent() {
-        if (minecraft.getConnection() != null)
+        if (minecraft.getConnection() != null) {
             PacketDistributor.sendToServer(new ProfileRequestPayload());
+            PacketDistributor.sendToServer(new ProfilRpRequestPayload());
+        }
     }
 
     @Override
@@ -90,17 +98,39 @@ public class ProfileScreen extends BaseMenuScreen {
             gfx.disableScissor();
         }
 
-        // ── Lignes d'infos ────────────────────────────────────────────────
+        // ── Lignes d'infos : Stats serveur ou Profil RP selon la vue ─────
+        if (vueRp) renderProfilRp(gfx, infoX, cy, infoW, topH);
+        else       renderStatsServeur(gfx, infoX, cy, infoW, topH);
+
+        // ── Boutons RETOUR + TRADE + bascule Stats/RP ─────────────────────
+        int btnY   = cy + topH + 8;
+        int retourW = (cw - 16) * 26 / 100;
+        int tradeW  = (cw - 16) * 32 / 100;
+        int rpW     = cw - 16 - retourW - tradeW;
+        retourBtnX = cx;                          retourBtnY = btnY; retourBtnW = retourW;
+        tradeBtnX  = cx + retourW + 8;            tradeBtnY  = btnY; tradeBtnW  = tradeW;
+        rpBtnX     = cx + retourW + tradeW + 16;  rpBtnY     = btnY; rpBtnW     = rpW;
+        renderBtn(gfx, mouseX, mouseY, retourBtnX, btnY, retourW, BTN_H, "RETOUR");
+        renderBtn(gfx, mouseX, mouseY, tradeBtnX, btnY, tradeW, BTN_H, "⇄ TRADE");
+        renderBtn(gfx, mouseX, mouseY, rpBtnX, btnY, rpW, BTN_H,
+                vueRp ? "⌂ STATS SERVEUR" : "☰ PROFIL RP");
+    }
+
+    /** Vue « Stats serveur » : statut, pseudo, grade, argent, cristaux, temps de jeu, UUID... */
+    private void renderStatsServeur(GuiGraphics gfx, int infoX, int cy, int infoW, int topH) {
         // PSEUDO et STATUS : disponibles directement côté client.
         // Les autres champs viennent du serveur (DB) — affiche "Chargement..." en attendant.
         String localPseudo = (minecraft.player != null)
                 ? minecraft.player.getGameProfile().getName() : null;
+        String localUuid   = (minecraft.player != null)
+                ? minecraft.player.getStringUUID() : null;
         String localStatus = (minecraft.getConnection() != null) ? "online" : "offline";
 
         String displayPseudo = or(ProfileDataManager.getPseudo(), localPseudo);
         String displayStatus = or(ProfileDataManager.getStatus(), localStatus);
 
-        String[] labels = {"STATUS", "PSEUDO", "GRADE", "VILLE", "MONEY", "CRISTAUX", "HEURES DE JEU", "CONNEXION"};
+        String[] labels = {"STATUS", "PSEUDO", "GRADE", "VILLE", "MONEY", "CRISTAUX",
+                           "HEURES DE JEU", "CONNEXION", "UUID"};
         String villeNom = ProfileDataManager.getVilleNom();
         String displayVille = (villeNom != null && !villeNom.isEmpty())
                 ? villeNom : "§7Aucune";
@@ -112,39 +142,86 @@ public class ProfileScreen extends BaseMenuScreen {
                 orLoading(formatMoney(ProfileDataManager.getMoney())),
                 orLoading(formatCristaux(ProfileDataManager.getCristaux())),
                 orLoading(ProfileDataManager.getHeuresDeJeu()),
-                orLoading(ProfileDataManager.getPremiereConnexion())
+                orLoading(ProfileDataManager.getPremiereConnexion()),
+                or(ProfileDataManager.getUuid(), localUuid)
         };
         int[] valueColors = {
                 statusColor(displayStatus),
                 C_VALUE,
                 gradeColor(GradeCache.getMonGrade()),
                 (villeNom != null && !villeNom.isEmpty()) ? C_VILLE : C_LABEL,
-                C_VALUE, C_CRISTAUX, C_VALUE, C_VALUE
+                C_VALUE, C_CRISTAUX, C_VALUE, C_VALUE, C_LABEL
         };
 
-        int rowH = (topH - (ROW_COUNT - 1) * ROW_GAP) / ROW_COUNT;
-        for (int i = 0; i < ROW_COUNT; i++) {
+        int rows = labels.length;
+        int rowH = (topH - (rows - 1) * ROW_GAP) / rows;
+        for (int i = 0; i < rows; i++) {
             int ry = cy + i * (rowH + ROW_GAP);
-            GuiUtils.fillChamferedRect(gfx, infoX, ry, infoW, rowH, 3, C_INFO_BG);
-            GuiUtils.drawChamferedBorder(gfx, infoX, ry, infoW, rowH, 3, 1, C_BORDER);
+            drawInfoRow(gfx, infoX, ry, infoW, rowH, labels[i], values[i], valueColors[i]);
+        }
+    }
 
-            // Accent vert sur le bord gauche
-            gfx.fill(infoX + 2, ry + 3, infoX + 3, ry + rowH - 3, 0xFF2EA84E);
+    /** Vue « Profil RP » : les informations du personnage créées à la première connexion. */
+    private void renderProfilRp(GuiGraphics gfx, int infoX, int cy, int infoW, int topH) {
+        boolean existe = ProfilRpDataManager.isExiste();
 
-            int midY = ry + (rowH - font.lineHeight + 1) / 2 + 1;
-            gfx.drawString(font, labels[i], infoX + 8, midY, C_LABEL, false);
-            int vw = font.width(values[i]);
-            gfx.drawString(font, values[i], infoX + infoW - vw - 6, midY, valueColors[i], false);
+        String[] labels = {"NOM", "PRÉNOM", "SEXE", "TAILLE",
+                           "ANCIENNE VILLE", "NOUVELLE VILLE", "MÉTIER"};
+        String[] values = existe
+                ? new String[]{
+                        ProfilRpDataManager.getNom(),
+                        ProfilRpDataManager.getPrenom(),
+                        ProfilRpDataManager.getSexe(),
+                        ProfilRpDataManager.getTaille(),
+                        ProfilRpDataManager.getAncienneVille(),
+                        ProfilRpDataManager.getNouvelleVille(),
+                        ProfilRpDataManager.getMetier()}
+                : new String[]{"§7—", "§7—", "§7—", "§7—", "§7—", "§7—", "§7—"};
+
+        // 7 lignes + un bloc description qui occupe le reste de la hauteur
+        int rows  = labels.length;
+        int descH = Math.max(28, topH * 22 / 100);
+        int gridH = topH - descH - ROW_GAP;
+        int rowH  = (gridH - (rows - 1) * ROW_GAP) / rows;
+
+        for (int i = 0; i < rows; i++) {
+            int ry = cy + i * (rowH + ROW_GAP);
+            int color = (i == 5) ? C_VILLE : C_VALUE; // Nouvelle ville en doré
+            drawInfoRow(gfx, infoX, ry, infoW, rowH, labels[i], values[i], color);
         }
 
-        // ── Boutons RETOUR (réduit) + TRADE ───────────────────────────────
-        int btnY = cy + topH + 8;
-        int retourW = (cw - 8) * 40 / 100;
-        int tradeW  = cw - 8 - retourW;
-        retourBtnX = cx;                retourBtnY = btnY; retourBtnW = retourW;
-        tradeBtnX  = cx + retourW + 8;  tradeBtnY  = btnY; tradeBtnW  = tradeW;
-        renderBtn(gfx, mouseX, mouseY, retourBtnX, btnY, retourW, BTN_H, "RETOUR");
-        renderBtn(gfx, mouseX, mouseY, tradeBtnX, btnY, tradeW, BTN_H, "⇄ TRADE");
+        // Bloc description (texte multi-lignes)
+        int dy = cy + gridH + ROW_GAP;
+        GuiUtils.fillChamferedRect(gfx, infoX, dy, infoW, descH, 3, C_INFO_BG);
+        GuiUtils.drawChamferedBorder(gfx, infoX, dy, infoW, descH, 3, 1, C_BORDER);
+        gfx.fill(infoX + 2, dy + 3, infoX + 3, dy + descH - 3, 0xFF2EA84E);
+        gfx.drawString(font, "DESCRIPTION", infoX + 8, dy + 4, C_LABEL, false);
+
+        String desc = existe ? ProfilRpDataManager.getDescription()
+                             : "§7Aucun profil RP — reconnecte-toi pour le créer.";
+        int lineY = dy + 4 + font.lineHeight + 2;
+        for (var line : font.split(net.minecraft.network.chat.Component.literal(desc), infoW - 16)) {
+            if (lineY + font.lineHeight > dy + descH - 3) break;
+            gfx.drawString(font, line, infoX + 8, lineY, C_VALUE, false);
+            lineY += font.lineHeight + 1;
+        }
+    }
+
+    /** Ligne d'info label/valeur — style commun aux deux vues. */
+    private void drawInfoRow(GuiGraphics gfx, int x, int y, int w, int h,
+                             String label, String value, int valueColor) {
+        GuiUtils.fillChamferedRect(gfx, x, y, w, h, 3, C_INFO_BG);
+        GuiUtils.drawChamferedBorder(gfx, x, y, w, h, 3, 1, C_BORDER);
+        gfx.fill(x + 2, y + 3, x + 3, y + h - 3, 0xFF2EA84E);
+
+        int midY = y + (h - font.lineHeight + 1) / 2 + 1;
+        gfx.drawString(font, label, x + 8, midY, C_LABEL, false);
+        String shown = value;
+        int maxW = w - font.width(label) - 22;
+        while (font.width(shown) > maxW && shown.length() > 4)
+            shown = shown.substring(0, shown.length() - 2) + "…";
+        int vw = font.width(shown);
+        gfx.drawString(font, shown, x + w - vw - 6, midY, valueColor, false);
     }
 
     // ── Bouton neon ───────────────────────────────────────────────────────
@@ -195,6 +272,11 @@ public class ProfileScreen extends BaseMenuScreen {
         if (mx >= tradeBtnX && mx < tradeBtnX + tradeBtnW
                 && my >= tradeBtnY && my < tradeBtnY + BTN_H) {
             minecraft.setScreen(new com.example.rolynkmodmenu.client.screen.trade.TradePlayerListScreen(this));
+            return true;
+        }
+        if (mx >= rpBtnX && mx < rpBtnX + rpBtnW
+                && my >= rpBtnY && my < rpBtnY + BTN_H) {
+            vueRp = !vueRp;
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);

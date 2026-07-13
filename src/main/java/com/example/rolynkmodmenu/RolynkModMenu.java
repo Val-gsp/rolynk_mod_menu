@@ -5,6 +5,7 @@ import com.example.rolynkmodmenu.network.*;
 import com.example.rolynkmodmenu.server.ServerBaliseHandler;
 import com.example.rolynkmodmenu.server.ServerBoutiqueHandler;
 import com.example.rolynkmodmenu.server.ServerTradeHandler;
+import com.example.rolynkmodmenu.server.ServerProfilRpHandler;
 import com.example.rolynkmodmenu.server.ServerProfileHandler;
 import com.example.rolynkmodmenu.server.ServerRecompenseHandler;
 import com.example.rolynkmodmenu.server.ServerVilleHandler;
@@ -51,6 +52,20 @@ public class RolynkModMenu {
         registrar.playToClient(ProfilJoueurPayload.TYPE,
                 ProfilJoueurPayload.STREAM_CODEC,
                 ClientPayloadHandlers::onProfilJoueur);
+
+        // ── Profil RP (création première connexion + consultation) ───────
+        registrar.playToServer(ProfilRpRequestPayload.TYPE,
+                ProfilRpRequestPayload.STREAM_CODEC,
+                ServerProfilRpHandler::onRequest);
+        registrar.playToServer(ProfilRpCreatePayload.TYPE,
+                ProfilRpCreatePayload.STREAM_CODEC,
+                ServerProfilRpHandler::onCreate);
+        registrar.playToClient(ProfilRpPayload.TYPE,
+                ProfilRpPayload.STREAM_CODEC,
+                ClientPayloadHandlers::onProfilRp);
+        registrar.playToClient(ProfilRpResultPayload.TYPE,
+                ProfilRpResultPayload.STREAM_CODEC,
+                ClientPayloadHandlers::onProfilRpResult);
 
         // ── Balises ───────────────────────────────────────────────────────
         registrar.playToServer(BaliseListRequestPayload.TYPE,
