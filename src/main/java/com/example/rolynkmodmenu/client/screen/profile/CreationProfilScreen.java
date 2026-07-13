@@ -1,36 +1,35 @@
 package com.example.rolynkmodmenu.client.screen.profile;
 
+import com.example.rolynkmodmenu.client.screen.BaseMenuScreen;
 import com.example.rolynkmodmenu.client.util.GuiUtils;
 import com.example.rolynkmodmenu.network.ProfilRpCreatePayload;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Fenêtre « Création Profil RP » — ouverte automatiquement à la première
- * connexion (profil RP absent en base). Le joueur renseigne son personnage ;
- * la nouvelle ville est préremplie avec "Rolynk" et non modifiable.
+ * connexion (profil RP absent en base). Même habillage que le menu principal
+ * (panel BaseMenuScreen : header logo, footer horloge, style néon).
  *
- * La validation finale est faite côté serveur (InputValidator) ; en cas de
- * refus, le message d'erreur est affiché dans le formulaire.
+ * Le joueur renseigne son personnage ; la nouvelle ville est préremplie avec
+ * "Rolynk" et non modifiable. La validation finale est faite côté serveur
+ * (InputValidator) ; en cas de refus, le message d'erreur s'affiche ici.
  */
-public class CreationProfilScreen extends Screen {
+public class CreationProfilScreen extends BaseMenuScreen {
 
-    private static final int PANEL_W = 380;
-    private static final int PANEL_H = 232;
+    // ── Couleurs (identiques à ProfileScreen) ─────────────────────────────
+    private static final int C_INFO_BG  = 0xFF141C26;
+    private static final int C_BORDER   = 0xFF1E2D3D;
+    private static final int C_LABEL    = 0xFF607080;
+    private static final int C_VALUE    = 0xFFEEF2F5;
+    private static final int C_VILLE    = 0xFFFFAA00;  // or — nouvelle ville imposée
 
-    private int dialogW() { return Math.min(PANEL_W, width  - 20); }
-    private int dialogH() { return Math.min(PANEL_H, height - 20); }
-
-    private static final int COLOR_BG        = 0xF20D1117;
-    private static final int COLOR_HEADER    = 0xFF141C26;
-    private static final int COLOR_BORDER    = 0xFF1E2D3D;
-    private static final int COLOR_LABEL     = 0xFFAAAAAA;
-    private static final int COLOR_CONFIRM_N = 0xFF1A5E1A;
-    private static final int COLOR_CONFIRM_H = 0xFF2A9E2A;
-    private static final int COLOR_READONLY  = 0xFFFFAA00;
+    private static final int BTN_H   = 20;
+    private static final int FIELD_H = 16;
+    private static final int ROW_H   = 30;   // label (10) + champ (16) + marge (4)
 
     private static final String[] SEXES = {"Homme", "Femme", "Autre"};
 
@@ -43,41 +42,53 @@ public class CreationProfilScreen extends Screen {
     private boolean envoiEnCours = false;
 
     // Zones cliquables calculées au rendu
-    private int sexeBtnX, sexeBtnY, sexeBtnW, sexeBtnH;
-    private int validerX, validerY, validerW, validerH;
+    private int sexeBtnX, sexeBtnY, sexeBtnW;
+    private int validerX, validerY, validerW;
 
     public CreationProfilScreen() {
-        super(Component.literal("Création Profil RP"));
+        super("MENU", "CRÉATION PROFIL RP");
     }
 
-    // ── Grille du formulaire ──────────────────────────────────────────────
-    // 3 rangées de 2 colonnes + description pleine largeur + bouton VALIDER.
+    // ── Layout ────────────────────────────────────────────────────────────
 
-    private int colW()        { return (dialogW() - 36) / 2; }
-    private int col1X(int px) { return px + 12; }
-    private int col2X(int px) { return px + 24 + colW(); }
-    private int rowY(int py, int row) { return py + 48 + row * 30; }
+    private int contentX() { return panelX() + PADDING; }
+    private int contentY() { return panelY() + HEADER_H + PADDING; }
+    private int contentW() { return panelW() - 2 * PADDING; }
+    private int colW()     { return (contentW() - BTN_GAP) / 2; }
+    private int col2X()    { return contentX() + colW() + BTN_GAP; }
+    /** Y de la rangée {@code row} (0-2 = champs, 3 = description). */
+    private int rowY(int row) { return contentY() + 12 + row * ROW_H; }
 
     @Override
-    protected void init() {
-        int px = (width  - dialogW()) / 2;
-        int py = (height - dialogH()) / 2;
+    protected void initContent() {
         int cw = colW();
 
-        nomInput           = champ(col1X(px), rowY(py, 0) + 10, cw, "Nom", 32);
-        prenomInput        = champ(col2X(px), rowY(py, 0) + 10, cw, "Prénom", 32);
+        // Fonds des champs — ajoutés en PREMIER pour être rendus sous les
+        // EditBox (BaseMenuScreen rend les widgets dans l'ordre d'ajout).
+        addRenderableOnly((net.minecraft.client.gui.components.Renderable)
+                (gfx, mx, my, pt) -> {
+            drawFieldBg(gfx, contentX(), rowY(0) + 10, cw);
+            drawFieldBg(gfx, col2X(),    rowY(0) + 10, cw);
+            drawFieldBg(gfx, col2X(),    rowY(1) + 10, cw);
+            drawFieldBg(gfx, contentX(), rowY(2) + 10, cw);
+            drawFieldBg(gfx, col2X(),    rowY(2) + 10, cw);
+            drawFieldBg(gfx, contentX(), rowY(3) + 10, contentW());
+        });
+
+        nomInput           = champ(contentX(), rowY(0) + 10, cw, "Nom", 32);
+        prenomInput        = champ(col2X(),    rowY(0) + 10, cw, "Prénom", 32);
         // rangée 1 : Sexe = bouton cyclique (rendu manuel), Taille = champ
-        tailleInput        = champ(col2X(px), rowY(py, 1) + 10, cw, "ex : 1m80", 16);
-        ancienneVilleInput = champ(col1X(px), rowY(py, 2) + 10, cw, "Ancienne ville", 32);
-        metierInput        = champ(col2X(px), rowY(py, 2) + 10, cw, "Métier", 32);
-        descriptionInput   = champ(col1X(px), rowY(py, 3) + 10, dialogW() - 24, "Décris ton personnage...", 256);
+        tailleInput        = champ(col2X(),    rowY(1) + 10, cw, "ex : 1m80", 16);
+        ancienneVilleInput = champ(contentX(), rowY(2) + 10, cw, "Ancienne ville", 32);
+        metierInput        = champ(col2X(),    rowY(2) + 10, cw, "Métier", 32);
+        descriptionInput   = champ(contentX(), rowY(3) + 10, contentW(), "Décris ton personnage...", 256);
 
         setFocused(nomInput);
         nomInput.setFocused(true);
     }
 
     private EditBox champ(int x, int y, int w, String hint, int maxLen) {
-        EditBox box = new EditBox(font, x + 2, y + 2, w - 4, 12, Component.literal(hint));
+        EditBox box = new EditBox(font, x + 5, y + 4, w - 10, 10, Component.literal(hint));
         box.setMaxLength(maxLen);
         box.setHint(Component.literal("§8" + hint));
         box.setBordered(false);
@@ -86,86 +97,81 @@ public class CreationProfilScreen extends Screen {
     }
 
     // ── Rendu ─────────────────────────────────────────────────────────────
+    // BaseMenuScreen dessine panel/header/widgets puis appelle renderContent :
+    // les fonds des champs sont donc dessinés ici PUIS les EditBox par-dessus
+    // au prochain passage — pour garder le texte visible, on redessine les
+    // valeurs par-dessus n'est pas nécessaire : on peint les fonds AVANT les
+    // widgets via renderContentBackground (voir render ci-dessous).
 
     @Override
-    public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
-        int dw = dialogW(), dh = dialogH();
-        int px = (width  - dw) / 2;
-        int py = (height - dh) / 2;
-        int cw = colW();
+    protected void renderContent(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
+        int cx = contentX(), cw = contentW(), colw = colW();
 
-        // Fond + header
-        GuiUtils.fillChamferedRect(gfx, px, py, dw, dh, 7, COLOR_BG);
-        GuiUtils.fillChamferedRect(gfx, px + 2, py + 2, dw - 4, 24, 6, COLOR_HEADER);
-        GuiUtils.drawChamferedBorder(gfx, px, py, dw, dh, 7, 2, COLOR_BORDER);
-        GuiUtils.drawCornerBrackets(gfx, px, py, dw, dh, 6, 5, 1, 0x553DDE6A);
+        // Sous-titre
+        gfx.drawCenteredString(font, "§7Créez votre personnage RP.",
+                panelX() + panelW() / 2, contentY(), 0xFFAAAAAA);
 
-        gfx.drawCenteredString(font, "§lCRÉATION PROFIL RP", px + dw / 2, py + 10, 0xFFFFFFFF);
-        gfx.drawCenteredString(font, "§7Créez votre personnage RP.", px + dw / 2, py + 32, 0xFFAAAAAA);
+        // Labels des champs
+        label(gfx, "NOM", cx, rowY(0));
+        label(gfx, "PRÉNOM", col2X(), rowY(0));
+        label(gfx, "SEXE", cx, rowY(1));
+        label(gfx, "TAILLE", col2X(), rowY(1));
+        label(gfx, "ANCIENNE VILLE", cx, rowY(2));
+        label(gfx, "MÉTIER", col2X(), rowY(2));
+        label(gfx, "DESCRIPTION DU PERSONNAGE", cx, rowY(3));
 
-        // Rangée 0 : Nom | Prénom
-        label(gfx, "Nom", col1X(px), rowY(py, 0));
-        boxBg(gfx, col1X(px), rowY(py, 0) + 10, cw);
-        label(gfx, "Prénom", col2X(px), rowY(py, 0));
-        boxBg(gfx, col2X(px), rowY(py, 0) + 10, cw);
+        // Bouton cyclique Sexe (même gabarit que les champs)
+        sexeBtnX = cx; sexeBtnY = rowY(1) + 10; sexeBtnW = colw;
+        boolean hovSexe = hover(mouseX, mouseY, sexeBtnX, sexeBtnY, sexeBtnW, FIELD_H);
+        GuiUtils.fillChamferedRect(gfx, sexeBtnX, sexeBtnY, sexeBtnW, FIELD_H, 3,
+                hovSexe ? 0xFF1A2840 : C_INFO_BG);
+        GuiUtils.drawChamferedBorder(gfx, sexeBtnX, sexeBtnY, sexeBtnW, FIELD_H, 3, 1,
+                hovSexe ? 0xFF3DD96A : C_BORDER);
+        gfx.fill(sexeBtnX + 2, sexeBtnY + 3, sexeBtnX + 3, sexeBtnY + FIELD_H - 3, 0xFF2EA84E);
+        gfx.drawCenteredString(font, SEXES[sexeIndex] + " §8⇄",
+                sexeBtnX + sexeBtnW / 2, sexeBtnY + 4, C_VALUE);
 
-        // Rangée 1 : Sexe (bouton cyclique) | Taille
-        label(gfx, "Sexe", col1X(px), rowY(py, 1));
-        sexeBtnX = col1X(px); sexeBtnY = rowY(py, 1) + 10; sexeBtnW = cw; sexeBtnH = 16;
-        boolean hovSexe = hover(mouseX, mouseY, sexeBtnX, sexeBtnY, sexeBtnW, sexeBtnH);
-        GuiUtils.fillChamferedRect(gfx, sexeBtnX, sexeBtnY, sexeBtnW, sexeBtnH, 3,
-                hovSexe ? 0xFF1A2840 : 0xFF0D1117);
-        GuiUtils.drawChamferedBorder(gfx, sexeBtnX, sexeBtnY, sexeBtnW, sexeBtnH, 3, 1,
-                hovSexe ? 0xFF3DD96A : COLOR_BORDER);
-        gfx.drawCenteredString(font, SEXES[sexeIndex] + " §8⇄", sexeBtnX + sexeBtnW / 2,
-                sexeBtnY + 4, 0xFFEEF2F5);
+        // Ligne « Nouvelle ville : Rolynk (non modifiable) » + erreur éventuelle
+        int nvY = rowY(3) + ROW_H;
+        gfx.drawString(font, "NOUVELLE VILLE", cx, nvY, C_LABEL, false);
+        int nvX = cx + font.width("NOUVELLE VILLE") + 8;
+        gfx.drawString(font, "§lRolynk", nvX, nvY, C_VILLE, false);
+        gfx.drawString(font, " §8(non modifiable)", nvX + font.width("Rolynk") + 4, nvY, 0xFF666666, false);
+        if (erreur != null) {
+            String msg = "§c" + erreur;
+            gfx.drawString(font, msg, cx + cw - font.width(msg), nvY, 0xFFFF5555, false);
+        }
 
-        label(gfx, "Taille", col2X(px), rowY(py, 1));
-        boxBg(gfx, col2X(px), rowY(py, 1) + 10, cw);
-
-        // Rangée 2 : Ancienne ville | Métier
-        label(gfx, "Ancienne ville", col1X(px), rowY(py, 2));
-        boxBg(gfx, col1X(px), rowY(py, 2) + 10, cw);
-        label(gfx, "Métier", col2X(px), rowY(py, 2));
-        boxBg(gfx, col2X(px), rowY(py, 2) + 10, cw);
-
-        // Rangée 3 : Description (pleine largeur)
-        label(gfx, "Description du personnage", col1X(px), rowY(py, 3));
-        boxBg(gfx, col1X(px), rowY(py, 3) + 10, dw - 24);
-
-        // Nouvelle ville — préremplie, non modifiable
-        int nvY = rowY(py, 3) + 30;
-        gfx.drawString(font, "§7Nouvelle ville :", col1X(px), nvY + 3, COLOR_LABEL, false);
-        gfx.drawString(font, "§l" + "Rolynk", col1X(px) + font.width("Nouvelle ville :  "),
-                nvY + 3, COLOR_READONLY, false);
-        gfx.drawString(font, "§8(non modifiable)", col1X(px) + font.width("Nouvelle ville :  Rolynk  "),
-                nvY + 3, 0xFF666666, false);
-
-        // Erreur serveur éventuelle
-        if (erreur != null)
-            gfx.drawCenteredString(font, "§c" + erreur, px + dw / 2, nvY + 14, 0xFFFF5555);
-
-        // Bouton VALIDER
-        validerW = dw - 24; validerH = 18;
-        validerX = px + 12;  validerY = py + dh - 24;
+        // Bouton VALIDER — style néon (identique aux boutons de ProfileScreen)
+        validerW = cw; validerX = cx;
+        validerY = panelY() + panelH() - FOOTER_H - BTN_H - 6;
         boolean can    = champsRemplis() && !envoiEnCours;
-        boolean hovVal = hover(mouseX, mouseY, validerX, validerY, validerW, validerH);
-        int bg = !can ? 0xFF444444 : (hovVal ? COLOR_CONFIRM_H : COLOR_CONFIRM_N);
-        GuiUtils.fillChamferedRect(gfx, validerX, validerY, validerW, validerH, 4, bg);
-        GuiUtils.drawChamferedBorder(gfx, validerX, validerY, validerW, validerH, 4, 1, COLOR_BORDER);
-        gfx.drawCenteredString(font, envoiEnCours ? "ENVOI..." : "VALIDER",
-                validerX + validerW / 2, validerY + 5, can ? 0xFFFFFFFF : 0xFF888888);
+        boolean hovVal = hover(mouseX, mouseY, validerX, validerY, validerW, BTN_H);
+        GuiUtils.fillChamferedRect(gfx, validerX, validerY, validerW, BTN_H, 4,
+                !can ? 0xA0141C26 : (hovVal ? 0xC01A2840 : 0xA0141C26));
+        if (hovVal && can) {
+            GuiUtils.drawChamferedBorder(gfx, validerX - 2, validerY - 2, validerW + 4, BTN_H + 4, 6, 1, 0x252ECC60);
+            GuiUtils.drawChamferedBorder(gfx, validerX - 1, validerY - 1, validerW + 2, BTN_H + 2, 5, 1, 0x552ECC60);
+            GuiUtils.drawNeonEdge(gfx, validerX, validerY, validerW, BTN_H, 4);
+        } else {
+            GuiUtils.drawChamferedBorder(gfx, validerX, validerY, validerW, BTN_H, 4, 1, 0xFF1C2C3C);
+        }
+        Component titre = Component.literal(envoiEnCours ? "ENVOI..." : "VALIDER")
+                .withStyle(ChatFormatting.BOLD);
+        gfx.drawCenteredString(font, titre, validerX + validerW / 2,
+                validerY + (BTN_H - font.lineHeight) / 2 + 1,
+                !can ? 0xFF888888 : (hovVal ? 0xFF3DD96A : C_VALUE));
+    }
 
-        super.render(gfx, mouseX, mouseY, partialTick);
+    /** Fond d'un champ de saisie — même style que les lignes d'infos du Profil. */
+    private void drawFieldBg(GuiGraphics gfx, int x, int y, int w) {
+        GuiUtils.fillChamferedRect(gfx, x, y, w, FIELD_H, 3, C_INFO_BG);
+        GuiUtils.drawChamferedBorder(gfx, x, y, w, FIELD_H, 3, 1, C_BORDER);
+        gfx.fill(x + 2, y + 3, x + 3, y + FIELD_H - 3, 0xFF2EA84E);
     }
 
     private void label(GuiGraphics gfx, String txt, int x, int y) {
-        gfx.drawString(font, "§7" + txt, x, y, COLOR_LABEL, false);
-    }
-
-    private void boxBg(GuiGraphics gfx, int x, int y, int w) {
-        GuiUtils.fillChamferedRect(gfx, x, y, w, 16, 3, 0xFF0D1117);
-        GuiUtils.drawChamferedBorder(gfx, x, y, w, 16, 3, 1, COLOR_BORDER);
+        gfx.drawString(font, txt, x, y, C_LABEL, false);
     }
 
     private static boolean hover(int mx, int my, int x, int y, int w, int h) {
@@ -187,11 +193,11 @@ public class CreationProfilScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             int mx = (int) mouseX, my = (int) mouseY;
-            if (hover(mx, my, sexeBtnX, sexeBtnY, sexeBtnW, sexeBtnH)) {
+            if (hover(mx, my, sexeBtnX, sexeBtnY, sexeBtnW, FIELD_H)) {
                 sexeIndex = (sexeIndex + 1) % SEXES.length;
                 return true;
             }
-            if (hover(mx, my, validerX, validerY, validerW, validerH)) {
+            if (hover(mx, my, validerX, validerY, validerW, BTN_H)) {
                 doValider();
                 return true;
             }
@@ -227,8 +233,4 @@ public class CreationProfilScreen extends Screen {
     // Création obligatoire : Échap ne ferme pas la fenêtre (elle se rouvrirait
     // de toute façon à la prochaine connexion tant que le profil n'existe pas).
     @Override public boolean shouldCloseOnEsc() { return false; }
-    @Override public boolean isPauseScreen()    { return false; }
-    @Override public void renderBackground(GuiGraphics gfx, int mx, int my, float pt) {
-        gfx.fill(0, 0, width, height, 0xB0000000);
-    }
 }
