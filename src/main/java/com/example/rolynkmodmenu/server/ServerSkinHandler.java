@@ -69,13 +69,13 @@ public final class ServerSkinHandler {
 
         String uuid = sp.getStringUUID();
         CompletableFuture.runAsync(() -> {
-            SkinService.SignedTexture tex = SkinService.generateFromUrl(url);
-            if (tex == null) {
+            SkinService.Resultat res = SkinService.generateFromUrl(url);
+            if (!res.isOk()) {
                 sp.getServer().execute(() -> PacketDistributor.sendToPlayer(sp,
-                        new SkinResultPayload(false,
-                                "Image refusée ou service indisponible — réessaie.")));
+                        new SkinResultPayload(false, messageErreur(res.erreur()))));
                 return;
             }
+            SkinService.SignedTexture tex = res.texture();
             SkinRepository.upsert(uuid, url, tex.value(), tex.signature());
             sp.getServer().execute(() -> {
                 boolean applied = applyToProfile(sp, tex.value(), tex.signature());
@@ -84,6 +84,16 @@ public final class ServerSkinHandler {
                 LOGGER.info("[Skin] {} a défini un skin personnalisé", sp.getGameProfile().getName());
             });
         }, BaliseStore.DB_EXECUTOR);
+    }
+
+    /** Message clair selon la cause de l'échec. */
+    private static String messageErreur(SkinService.Erreur e) {
+        return switch (e) {
+            case URL            -> "URL invalide (doit commencer par http).";
+            case TELECHARGEMENT -> "Image inaccessible — vérifie le lien (lien Discord expiré ?).";
+            case FORMAT         -> "L'image doit être un skin PNG 64×64.";
+            case MINESKIN       -> "Service de skin indisponible — réessaie dans un instant.";
+        };
     }
 
     // ── Application au login (ré-applique le skin stocké) ─────────────────
