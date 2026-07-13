@@ -3,6 +3,8 @@ package com.example.rolynkmodmenu;
 import com.example.rolynkmodmenu.client.network.ClientPayloadHandlers;
 import com.example.rolynkmodmenu.network.*;
 import com.example.rolynkmodmenu.server.ServerBaliseHandler;
+import com.example.rolynkmodmenu.server.ServerBoutiqueHandler;
+import com.example.rolynkmodmenu.server.ServerTradeHandler;
 import com.example.rolynkmodmenu.server.ServerProfileHandler;
 import com.example.rolynkmodmenu.server.ServerRecompenseHandler;
 import com.example.rolynkmodmenu.server.ServerVilleHandler;
@@ -77,6 +79,45 @@ public class RolynkModMenu {
         registrar.playToClient(RecompensesPayload.TYPE,
                 RecompensesPayload.STREAM_CODEC,
                 ClientPayloadHandlers::onRecompenses);
+
+        // ── Boutique Jeux ─────────────────────────────────────────────────
+        registrar.playToServer(BoutiqueCatalogRequestPayload.TYPE,
+                BoutiqueCatalogRequestPayload.STREAM_CODEC,
+                ServerBoutiqueHandler::onCatalogRequest);
+        registrar.playToServer(BoutiqueVendrePayload.TYPE,
+                BoutiqueVendrePayload.STREAM_CODEC,
+                ServerBoutiqueHandler::onVendre);
+        registrar.playToClient(BoutiqueCatalogPayload.TYPE,
+                BoutiqueCatalogPayload.STREAM_CODEC,
+                ClientPayloadHandlers::onBoutiqueCatalog);
+
+        // ── Trade — C2S ───────────────────────────────────────────────────
+        registrar.playToServer(TradeListRequestPayload.TYPE,
+                TradeListRequestPayload.STREAM_CODEC,
+                ServerTradeHandler::onListRequest);
+        registrar.playToServer(TradeRequestPayload.TYPE,
+                TradeRequestPayload.STREAM_CODEC,
+                ServerTradeHandler::onRequest);
+        registrar.playToServer(TradeRespondPayload.TYPE,
+                TradeRespondPayload.STREAM_CODEC,
+                ServerTradeHandler::onRespond);
+        registrar.playToServer(TradeActionPayload.TYPE,
+                TradeActionPayload.STREAM_CODEC,
+                ServerTradeHandler::onAction);
+
+        // ── Trade — S2C ───────────────────────────────────────────────────
+        registrar.playToClient(TradeListPayload.TYPE,
+                TradeListPayload.STREAM_CODEC,
+                ClientPayloadHandlers::onTradeList);
+        registrar.playToClient(TradeOpenPayload.TYPE,
+                TradeOpenPayload.STREAM_CODEC,
+                ClientPayloadHandlers::onTradeOpen);
+        registrar.playToClient(TradeStatePayload.TYPE,
+                TradeStatePayload.STREAM_CODEC,
+                ClientPayloadHandlers::onTradeState);
+        registrar.playToClient(TradeClosePayload.TYPE,
+                TradeClosePayload.STREAM_CODEC,
+                ClientPayloadHandlers::onTradeClose);
 
         // ── Villes — C2S ──────────────────────────────────────────────────
         registrar.playToServer(VilleListRequestPayload.TYPE,

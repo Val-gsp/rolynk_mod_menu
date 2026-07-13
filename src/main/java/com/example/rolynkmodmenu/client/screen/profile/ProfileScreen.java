@@ -38,8 +38,9 @@ public class ProfileScreen extends BaseMenuScreen {
 
     private final Screen previousScreen;
 
-    // Zone du bouton RETOUR (calculée au rendu)
+    // Zones des boutons RETOUR et TRADE (calculées au rendu)
     private int retourBtnX, retourBtnY, retourBtnW;
+    private int tradeBtnX, tradeBtnY, tradeBtnW;
 
     public ProfileScreen(Screen previous) {
         super("MENU", "PROFIL");
@@ -136,10 +137,14 @@ public class ProfileScreen extends BaseMenuScreen {
             gfx.drawString(font, values[i], infoX + infoW - vw - 6, midY, valueColors[i], false);
         }
 
-        // ── Bouton RETOUR ─────────────────────────────────────────────────
+        // ── Boutons RETOUR (réduit) + TRADE ───────────────────────────────
         int btnY = cy + topH + 8;
-        retourBtnX = cx; retourBtnY = btnY; retourBtnW = cw;
-        renderBtn(gfx, mouseX, mouseY, cx, btnY, cw, BTN_H, "RETOUR");
+        int retourW = (cw - 8) * 40 / 100;
+        int tradeW  = cw - 8 - retourW;
+        retourBtnX = cx;                retourBtnY = btnY; retourBtnW = retourW;
+        tradeBtnX  = cx + retourW + 8;  tradeBtnY  = btnY; tradeBtnW  = tradeW;
+        renderBtn(gfx, mouseX, mouseY, retourBtnX, btnY, retourW, BTN_H, "RETOUR");
+        renderBtn(gfx, mouseX, mouseY, tradeBtnX, btnY, tradeW, BTN_H, "⇄ TRADE");
     }
 
     // ── Bouton neon ───────────────────────────────────────────────────────
@@ -185,6 +190,11 @@ public class ProfileScreen extends BaseMenuScreen {
         if (mx >= retourBtnX && mx < retourBtnX + retourBtnW
                 && my >= retourBtnY && my < retourBtnY + BTN_H) {
             onClose();
+            return true;
+        }
+        if (mx >= tradeBtnX && mx < tradeBtnX + tradeBtnW
+                && my >= tradeBtnY && my < tradeBtnY + BTN_H) {
+            minecraft.setScreen(new com.example.rolynkmodmenu.client.screen.trade.TradePlayerListScreen(this));
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);

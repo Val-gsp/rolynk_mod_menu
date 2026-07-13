@@ -4,7 +4,10 @@ import com.example.rolynkmodmenu.RolynkModMenu;
 import com.example.rolynkmodmenu.network.VilleProfilePayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.BossEvent;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -37,6 +40,9 @@ public final class VilleEventSubscriber {
 
     /** Timestamps de login pour calculer les heures de session à la déconnexion. */
     private static final ConcurrentHashMap<String, Long> LOGIN_TIMES = new ConcurrentHashMap<>();
+
+    // Boss bar (style wither) affichée au joueur quand il est dans le claim d'une ville.
+    private static final ConcurrentHashMap<String, ServerBossEvent> VILLE_BOSSBARS = new ConcurrentHashMap<>();
 
     // ── Cycle de vie serveur ──────────────────────────────────────────────
 
@@ -111,7 +117,12 @@ public final class VilleEventSubscriber {
         ServerProfileHandler.onPlayerLogout(sp.getUUID());
         ServerBaliseHandler.onPlayerLogout(sp.getUUID());
         ServerRecompenseHandler.onPlayerLogout(sp.getUUID());
+        ServerBoutiqueHandler.onPlayerLogout(sp.getUUID());
+        ServerTradeHandler.onPlayerLogout(sp.getUUID());
         VilleStore.LAST_CHUNK.remove(uuid);
+
+        ServerBossEvent bar = VILLE_BOSSBARS.remove(uuid);
+        if (bar != null) bar.removeAllPlayers();
 
         // Calcul des heures de session
         Long loginTime = LOGIN_TIMES.remove(uuid);
@@ -134,13 +145,23 @@ public final class VilleEventSubscriber {
         // Les opérateurs (niveau 2+) ne sont jamais bloqués : ils peuvent
         // utiliser WorldEdit et bâtir n'importe où, même dans un claim.
         if (sp.hasPermissions(2)) return -1;
-        int villeId = VilleStore.getVilleOfChunk(
-                RolynkConfig.serverName(), pos.getX() >> 4, pos.getZ() >> 4);
-        if (villeId == -1) return -1;
+        String monde = RolynkConfig.serverName();
+        int villeId = VilleStore.getVilleOfChunk(monde, pos.getX() >> 4, pos.getZ() >> 4);
+        if (villeId == -1) {
+            // Chunk non claim : bloqué (sentinelle 0) si la protection hors-claim est
+            // active sur ce monde de claim. Le joueur doit claim avec sa ville.
+            return (RolynkConfig.protegerHorsClaim() && RolynkConfig.isClaimAutorise(monde)) ? 0 : -1;
+        }
         return VilleStore.getVilleIdByUuid(sp.getStringUUID()) == villeId ? -1 : villeId;
     }
 
     private static void refuser(ServerPlayer sp, int villeId, String action) {
+        if (villeId == 0) {
+            sp.sendSystemMessage(Component.literal(
+                    "§cCe chunk n'est claim par aucune ville. Claim-le avec ta ville pour "
+                    + action + " ici."));
+            return;
+        }
         sp.sendSystemMessage(Component.literal(
                 "§cCe chunk appartient à §e" + VilleStore.getVilleNom(villeId)
                 + "§c. Tu ne peux pas " + action + " ici."));
@@ -217,9 +238,50 @@ public final class VilleEventSubscriber {
 
         String monde = RolynkConfig.serverName();
         int villeId = VilleStore.getVilleOfChunk(monde, cx, cz);
+        updateVilleBossBar(sp, uuid, monde, cx, cz, villeId);
+    }
+
+    /**
+     * Boss bar (style wither) affichée en permanence sur un monde de claim :
+     * - nom de la ville (violet) dans le claim d'une ville,
+     * - "Claim Server" (rouge) dans un claim serveur OPC (fait par un OP),
+     * - "Zone Libre" (vert) hors de tout claim.
+     * Sur un monde sans claim (lobby…), aucune barre.
+     */
+    private static void updateVilleBossBar(ServerPlayer sp, String uuid, String monde,
+                                           int cx, int cz, int villeId) {
+        if (!RolynkConfig.isClaimAutorise(monde)) {          // monde sans claim → pas de barre
+            ServerBossEvent bar = VILLE_BOSSBARS.get(uuid);
+            if (bar != null) bar.removePlayer(sp);
+            return;
+        }
+
+        Component titre;
+        BossEvent.BossBarColor couleur;
         if (villeId != -1) {
             String nom = VilleStore.getVilleNom(villeId);
-            sp.displayClientMessage(Component.literal("§6⚑ §e" + nom), true);
+            if (nom == null) return;
+            titre = Component.literal(nom).withStyle(style -> style.withBold(true)
+                    .withColor(TextColor.fromRgb(OPCServerIntegration.colorForVille(villeId))));
+            couleur = BossEvent.BossBarColor.PURPLE;
+        } else if (OPCServerIntegration.isChunkClaimed(sp.getServer(), cx, cz)) {
+            // Chunk claim dans OPC mais pas une ville → claim serveur (OP).
+            titre = Component.literal("Claim Server").withStyle(style ->
+                    style.withBold(true).withColor(TextColor.fromRgb(0xFF5555)));   // rouge
+            couleur = BossEvent.BossBarColor.RED;
+        } else {
+            titre = Component.literal("Zone Libre").withStyle(style ->
+                    style.withBold(true).withColor(TextColor.fromRgb(0x55FF55)));   // vert
+            couleur = BossEvent.BossBarColor.GREEN;
         }
+
+        ServerBossEvent bar = VILLE_BOSSBARS.computeIfAbsent(uuid, k -> {
+            ServerBossEvent b = new ServerBossEvent(titre, couleur, BossEvent.BossBarOverlay.PROGRESS);
+            b.setProgress(1.0f);
+            return b;
+        });
+        bar.setName(titre);       // met à jour le texte (changement de ville / zone libre)
+        bar.setColor(couleur);    // violet dans une ville, vert en zone libre
+        bar.addPlayer(sp);        // affiche (idempotent si déjà visible)
     }
 }

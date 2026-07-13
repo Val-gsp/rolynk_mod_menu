@@ -93,6 +93,19 @@ public final class OPCServerIntegration {
         }
     }
 
+    /** @return true si le chunk est claim dans OPC (ville OU claim serveur d'un OP). */
+    public static boolean isChunkClaimed(MinecraftServer server, int cx, int cz) {
+        if (!isAvailable()) return false;
+        try {
+            Object api = getAPI(server);
+            Object mgr = call0(api, "getServerClaimsManager");
+            ResourceLocation dim = ResourceLocation.withDefaultNamespace("overworld");
+            return call(mgr, "get", dim, cx, cz) != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /** Retire un chunk d'OPC. Main thread uniquement. */
     public static void unregisterClaim(MinecraftServer server, int cx, int cz) {
         if (!isAvailable()) return;
@@ -161,11 +174,17 @@ public final class OPCServerIntegration {
         Object config  = call1(configs, "getLoadedConfig", UUID.class, uid);
         if (config == null) return;
 
-        Class<?> optsCls   = Class.forName("xaero.pac.common.claims.player.api.IPlayerChunkClaimOptionAPI");
+        // OPC 0.27.x : les options de config ont déménagé dans PlayerConfigOptions.
+        Class<?> optsCls   = Class.forName("xaero.pac.common.server.player.config.api.PlayerConfigOptions");
         Method   tryToSet  = findMethod(config.getClass(), "tryToSet");
 
         tryToSet.invoke(config, optsCls.getField("CLAIMS_NAME").get(null),  villeNom);
         tryToSet.invoke(config, optsCls.getField("CLAIMS_COLOR").get(null), colorForVille(villeId));
+
+        // Claims de ville = DISPLAY-ONLY sur la minimap : OPC ne protège PAS (c'est
+        // le mod, via villeBloquante, qui gère les droits de construction des membres).
+        try { tryToSet.invoke(config, optsCls.getField("PROTECT_CLAIMED_CHUNKS").get(null), false); }
+        catch (Exception ignored) {}
 
         // Désactiver les notifs OPC (le mod affiche sa propre actionbar)
         for (String optName : new String[]{

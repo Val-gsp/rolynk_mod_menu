@@ -105,17 +105,14 @@ public final class ServerVilleHandler {
         int    villeId = payload.villeId();
         String myUuid  = sp.getUUID().toString();
 
-        // ── Validation : le joueur doit être membre de cette ville ──────────────
         if (!InputValidator.isValidVilleId(villeId)) return;
 
-        int playerVilleId = VilleStore.getVilleIdByUuid(myUuid);
-        if (playerVilleId != villeId) {
-            LOGGER.warn("[Security] MembresRequest: {} demande ville {} mais est en ville {}",
-                    myUuid, villeId, playerVilleId);
-            return;
-        }
-
+        // La liste des membres est un annuaire PUBLIC : consultable par tous, même
+        // si on n'est pas membre de la ville. Les actions de gestion (kick/promote,
+        // banque, logs, demandes) restent protégées séparément dans leurs handlers.
         CompletableFuture.runAsync(() -> {
+            // Grade du demandeur DANS cette ville : "" s'il n'en est pas membre
+            // → le client affiche la liste en lecture seule (pas de boutons de gestion).
             String myGrade    = VilleStore.getGrade(villeId, myUuid);
             if (myGrade == null) myGrade = "";
             double playerMoney = VilleStore.getMoney(myUuid);

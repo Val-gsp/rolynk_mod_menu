@@ -1,6 +1,7 @@
 package com.example.rolynkmodmenu.client.network;
 
 import com.example.rolynkmodmenu.client.balise.BaliseDataManager;
+import com.example.rolynkmodmenu.client.boutique.BoutiqueDataManager;
 import com.example.rolynkmodmenu.client.grade.GradeCache;
 import com.example.rolynkmodmenu.client.profile.ProfileDataManager;
 import com.example.rolynkmodmenu.client.profile.ProfilJoueurDataManager;
@@ -108,5 +109,37 @@ public final class ClientPayloadHandlers {
 
     public static void onVilleProfile(VilleProfilePayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> VilleProfileDataManager.setVilleNom(payload.villeNom()));
+    }
+
+    // ── Boutique ──────────────────────────────────────────────────────────
+
+    public static void onBoutiqueCatalog(BoutiqueCatalogPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> BoutiqueDataManager.set(payload.offres()));
+    }
+
+    // ── Trade ─────────────────────────────────────────────────────────────
+
+    public static void onTradeList(TradeListPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() ->
+                com.example.rolynkmodmenu.client.trade.TradeDataManager.setListe(
+                        payload.joueurs(), payload.demandes()));
+    }
+
+    /** Demande acceptée : ouvre l'écran de trade des deux côtés.
+     *  (délégué à TradeDataManager — sided-safety, voir commentaire là-bas) */
+    public static void onTradeOpen(TradeOpenPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() ->
+                com.example.rolynkmodmenu.client.trade.TradeDataManager.ouvrirEcran(payload.partenaire()));
+    }
+
+    public static void onTradeState(TradeStatePayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() ->
+                com.example.rolynkmodmenu.client.trade.TradeDataManager.setState(payload));
+    }
+
+    /** Session terminée côté serveur : ferme l'écran sans renvoyer de CANCEL. */
+    public static void onTradeClose(TradeClosePayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() ->
+                com.example.rolynkmodmenu.client.trade.TradeDataManager.fermerEcran());
     }
 }

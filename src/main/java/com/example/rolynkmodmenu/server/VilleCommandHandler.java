@@ -455,7 +455,6 @@ public final class VilleCommandHandler {
                     }
                     int cx = sp.getBlockX() >> 4;
                     int cz = sp.getBlockZ() >> 4;
-                    double cout = RolynkConfig.coutClaim();
 
                     CompletableFuture.runAsync(() -> {
                         // Grade vérifié ici (requête DB) — jamais sur le main thread
@@ -465,6 +464,11 @@ public final class VilleCommandHandler {
                                     Component.literal("§cSeuls Chef et Adjoint peuvent claimer.")));
                             return;
                         }
+                        // Coût PROGRESSIF : base pour le 1er claim, puis +increment par claim.
+                        // 1er = base, 2e = base+incr, 3e = base+2×incr, ... (100, 150, 200, ...)
+                        int nbClaims = VilleStore.getVilleClaims(villeId).size();
+                        double cout  = RolynkConfig.coutClaim()
+                                     + RolynkConfig.coutClaimIncrement() * nbClaims;
                         // Claim + débit dans une SEULE transaction (VilleStore)
                         String err = VilleStore.claimChunk(villeId, monde, cx, cz, uuid, cout);
                         if (err != null) {
