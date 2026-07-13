@@ -15,9 +15,8 @@ public class NavigationScreen extends BaseMenuScreen {
 
     // Noms des serveurs tels que déclarés dans velocity.toml.
     // Doivent correspondre aux entrées [servers] du proxy.
-    private static final String SERVEUR_VILLE     = "ville";
-    private static final String SERVEUR_CAPITALE  = "capitale";
-    private static final String SERVEUR_RESSOURCE = "ressource";
+    private static final String SERVEUR_LOBBY = "lobby";
+    private static final String SERVEUR_VILLE = "ville";
 
     public NavigationScreen() {
         super("MENU", "NAVIGATION");
@@ -30,27 +29,19 @@ public class NavigationScreen extends BaseMenuScreen {
         int contentY = panelY() + HEADER_H + PADDING;
         int contentW = panelW() - 2 * PADDING;
         int contentH = panelH() - HEADER_H - 2 * PADDING - FOOTER_H;
-        int bw      = (contentW - 2 * BTN_GAP) / 3;
-        int sideH   = contentH * 70 / 100;
-        int sideOffY = (contentH - sideH) / 2;
+        int bw      = (contentW - BTN_GAP) / 2;
 
         addRenderableWidget(new MenuButton(
-                contentX,                       contentY + sideOffY, bw, sideH,
-                "VILLE",     "Rejoindre le serveur Ville",
+                contentX,                contentY, bw, contentH,
+                "LOBBY", "Rejoindre le Lobby",
+                new ItemStack(Items.NETHER_STAR),
+                () -> connectToServer(SERVEUR_LOBBY)));
+
+        addRenderableWidget(new MenuButton(
+                contentX + bw + BTN_GAP, contentY, bw, contentH,
+                "VILLE", "Rejoindre le serveur Ville",
                 new ItemStack(Items.CAMPFIRE),
                 () -> connectToServer(SERVEUR_VILLE)));
-
-        addRenderableWidget(new MenuButton(
-                contentX + bw + BTN_GAP,        contentY, bw, contentH,
-                "CAPITALE",  "Rejoindre le serveur Capitale",
-                new ItemStack(Items.BEACON),
-                () -> connectToServer(SERVEUR_CAPITALE)));
-
-        addRenderableWidget(new MenuButton(
-                contentX + 2 * (bw + BTN_GAP), contentY + sideOffY, bw, sideH,
-                "RESSOURCE", "Rejoindre le serveur Ressource",
-                new ItemStack(Items.IRON_ORE),
-                () -> connectToServer(SERVEUR_RESSOURCE)));
     }
 
     /**
