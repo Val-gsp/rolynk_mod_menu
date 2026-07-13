@@ -63,6 +63,16 @@ public final class ClientPayloadHandlers {
         });
     }
 
+    /** Résultat de l'application du skin → transmis à l'écran de skin s'il est ouvert. */
+    public static void onSkinResult(SkinResultPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (Minecraft.getInstance().screen
+                    instanceof com.example.rolynkmodmenu.client.screen.profile.SkinScreen s) {
+                s.onResultat(payload.ok(), payload.message());
+            }
+        });
+    }
+
     // ── Balises ───────────────────────────────────────────────────────────
 
     public static void onBaliseList(BaliseListPayload payload, IPayloadContext ctx) {

@@ -108,6 +108,9 @@ public final class VilleEventSubscriber {
             // Envoi du profil RP — si absent (première connexion), le client
             // ouvre automatiquement l'écran « Création Profil RP ».
             ServerProfilRpHandler.sendProfilRp(sp);
+
+            // Ré-applique le skin personnalisé stocké (si le joueur en a un).
+            ServerSkinHandler.applyStoredSkin(sp);
         }, BaliseStore.DB_EXECUTOR);
     }
 
@@ -120,6 +123,7 @@ public final class VilleEventSubscriber {
         ServerVilleHandler.onPlayerLogout(sp.getUUID());
         ServerProfileHandler.onPlayerLogout(sp.getUUID());
         ServerProfilRpHandler.onPlayerLogout(sp.getUUID());
+        ServerSkinHandler.onPlayerLogout(sp.getUUID());
         ServerBaliseHandler.onPlayerLogout(sp.getUUID());
         ServerRecompenseHandler.onPlayerLogout(sp.getUUID());
         ServerBoutiqueHandler.onPlayerLogout(sp.getUUID());

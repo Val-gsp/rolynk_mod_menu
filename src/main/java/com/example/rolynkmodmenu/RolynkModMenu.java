@@ -7,6 +7,7 @@ import com.example.rolynkmodmenu.server.ServerBoutiqueHandler;
 import com.example.rolynkmodmenu.server.ServerTradeHandler;
 import com.example.rolynkmodmenu.server.ServerProfilRpHandler;
 import com.example.rolynkmodmenu.server.ServerProfileHandler;
+import com.example.rolynkmodmenu.server.ServerSkinHandler;
 import com.example.rolynkmodmenu.server.ServerRecompenseHandler;
 import com.example.rolynkmodmenu.server.ServerVilleHandler;
 import com.mojang.logging.LogUtils;
@@ -66,6 +67,14 @@ public class RolynkModMenu {
         registrar.playToClient(ProfilRpResultPayload.TYPE,
                 ProfilRpResultPayload.STREAM_CODEC,
                 ClientPayloadHandlers::onProfilRpResult);
+
+        // ── Skin personnalisé ─────────────────────────────────────────────
+        registrar.playToServer(SkinApplyPayload.TYPE,
+                SkinApplyPayload.STREAM_CODEC,
+                ServerSkinHandler::onApply);
+        registrar.playToClient(SkinResultPayload.TYPE,
+                SkinResultPayload.STREAM_CODEC,
+                ClientPayloadHandlers::onSkinResult);
 
         // ── Balises ───────────────────────────────────────────────────────
         registrar.playToServer(BaliseListRequestPayload.TYPE,

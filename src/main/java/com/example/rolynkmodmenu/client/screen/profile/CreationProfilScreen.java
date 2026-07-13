@@ -259,7 +259,8 @@ public class CreationProfilScreen extends BaseMenuScreen {
     public void onResultat(boolean ok, String message) {
         envoiEnCours = false;
         if (ok) {
-            minecraft.setScreen(null);
+            // Enchaîne sur le choix du skin (le joueur peut valider sans changer).
+            minecraft.setScreen(new SkinScreen());
         } else {
             erreur = message;
         }
