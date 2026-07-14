@@ -101,11 +101,8 @@ public final class JoueurRepository {
     public static ProfileData fetchProfile(String uuid) {
         String sql = """
                 SELECT j.uuid, j.status, j.pseudo, j.grade, j.money, j.cristaux,
-                       j.heures_de_jeu, j.premiere_connexion,
-                       COALESCE(v.nom, '') AS ville_nom
+                       j.heures_de_jeu, j.premiere_connexion
                 FROM joueurs j
-                LEFT JOIN villes_membres vm ON vm.uuid = j.uuid
-                LEFT JOIN villes v ON v.id = vm.ville_id
                 WHERE j.uuid = ?
                 """;
         try (Connection c = Database.getConnection();
@@ -134,7 +131,7 @@ public final class JoueurRepository {
                         cristauxStr,
                         heuresStr,
                         pcStr,
-                        rs.getString("ville_nom")
+                        ""   // villeNom : système de ville retiré (v1.7.0)
                 );
             }
         } catch (SQLException e) {

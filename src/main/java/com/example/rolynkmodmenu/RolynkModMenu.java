@@ -9,7 +9,6 @@ import com.example.rolynkmodmenu.server.ServerProfilRpHandler;
 import com.example.rolynkmodmenu.server.ServerProfileHandler;
 import com.example.rolynkmodmenu.server.ServerSkinHandler;
 import com.example.rolynkmodmenu.server.ServerRecompenseHandler;
-import com.example.rolynkmodmenu.server.ServerVilleHandler;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -94,9 +93,6 @@ public class RolynkModMenu {
         registrar.playToServer(RecompenseClaimPayload.TYPE,
                 RecompenseClaimPayload.STREAM_CODEC,
                 ServerRecompenseHandler::onClaim);
-        registrar.playToServer(VoteVilleActionPayload.TYPE,
-                VoteVilleActionPayload.STREAM_CODEC,
-                ServerRecompenseHandler::onVoter);
         registrar.playToServer(ExplorationClaimPayload.TYPE,
                 ExplorationClaimPayload.STREAM_CODEC,
                 ServerRecompenseHandler::onExplorationClaim);
@@ -143,41 +139,5 @@ public class RolynkModMenu {
                 TradeClosePayload.STREAM_CODEC,
                 ClientPayloadHandlers::onTradeClose);
 
-        // ── Villes — C2S ──────────────────────────────────────────────────
-        registrar.playToServer(VilleListRequestPayload.TYPE,
-                VilleListRequestPayload.STREAM_CODEC,
-                ServerVilleHandler::onListRequest);
-        registrar.playToServer(VilleMembresRequestPayload.TYPE,
-                VilleMembresRequestPayload.STREAM_CODEC,
-                ServerVilleHandler::onMembresRequest);
-        registrar.playToServer(VilleActionPayload.TYPE,
-                VilleActionPayload.STREAM_CODEC,
-                ServerVilleHandler::onAction);
-        registrar.playToServer(VilleLogsRequestPayload.TYPE,
-                VilleLogsRequestPayload.STREAM_CODEC,
-                ServerVilleHandler::onLogsRequest);
-        registrar.playToServer(VilleDemandesRequestPayload.TYPE,
-                VilleDemandesRequestPayload.STREAM_CODEC,
-                ServerVilleHandler::onDemandesRequest);
-
-        // ── Villes — S2C ──────────────────────────────────────────────────
-        registrar.playToClient(VilleListPayload.TYPE,
-                VilleListPayload.STREAM_CODEC,
-                ClientPayloadHandlers::onVilleList);
-        registrar.playToClient(VilleMembresPayload.TYPE,
-                VilleMembresPayload.STREAM_CODEC,
-                ClientPayloadHandlers::onVilleMembres);
-        registrar.playToClient(VilleActionResultPayload.TYPE,
-                VilleActionResultPayload.STREAM_CODEC,
-                ClientPayloadHandlers::onVilleActionResult);
-        registrar.playToClient(VilleLogsBanquePayload.TYPE,
-                VilleLogsBanquePayload.STREAM_CODEC,
-                ClientPayloadHandlers::onVilleLogs);
-        registrar.playToClient(VilleDemandesPayload.TYPE,
-                VilleDemandesPayload.STREAM_CODEC,
-                ClientPayloadHandlers::onVilleDemandes);
-        registrar.playToClient(VilleProfilePayload.TYPE,
-                VilleProfilePayload.STREAM_CODEC,
-                ClientPayloadHandlers::onVilleProfile);
     }
 }

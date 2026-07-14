@@ -16,14 +16,6 @@ public final class InputValidator {
     // ── Patterns de validation ─────────────────────────────────────────────────
 
     /**
-     * Noms de ville : 3–32 caractères.
-     * Autorisés : lettres Unicode (y compris accentuées), chiffres, tirets, underscores.
-     * Refusés   : espaces, codes §, caractères de contrôle, balises HTML, guillemets.
-     */
-    private static final Pattern VILLE_NAME =
-            Pattern.compile("^[\\p{L}0-9_\\-]{3,32}$");
-
-    /**
      * Noms de balise : 1–32 caractères.
      * Plus permissif : les espaces sont autorisés (noms composés).
      * Refusés : codes §, caractères de contrôle, guillemets.
@@ -49,19 +41,6 @@ public final class InputValidator {
 
     // ── Ensembles de valeurs autorisées ────────────────────────────────────────
 
-    /**
-     * Actions autorisées dans {@code VilleActionPayload}.
-     * Tout autre string est rejeté avant traitement.
-     */
-    public static final Set<String> VALID_ACTIONS = Set.of(
-            "kick", "deposer", "retirer",
-            "acc_dem", "ref_dem",
-            "grade", "dissoudre", "quitter", "set_rec"
-    );
-
-    /** Grades de ville valides. */
-    public static final Set<String> VALID_GRADES = Set.of("Membre", "Adjoint", "Chef");
-
     // ── Profil RP ──────────────────────────────────────────────────────────────
 
     /** Texte court RP (nom, prénom, ville, métier) : PREMIÈRE LETTRE MAJUSCULE obligatoire. */
@@ -79,12 +58,6 @@ public final class InputValidator {
     /** Valeurs de sexe proposées par le formulaire (bouton cyclique côté client). */
     public static final Set<String> VALID_SEXES = Set.of("Homme", "Femme", "Autre");
 
-    /** Modes de recrutement valides (doit correspondre aux constantes VilleStore). */
-    public static final Set<String> VALID_REC = Set.of(
-            VilleStore.RECRUTEMENT_OUVERT,
-            VilleStore.RECRUTEMENT_SUR_DEMANDE,
-            VilleStore.RECRUTEMENT_FERME
-    );
 
     // ── Limites numériques ─────────────────────────────────────────────────────
 
@@ -94,11 +67,6 @@ public final class InputValidator {
     private InputValidator() {}
 
     // ── Méthodes de validation ─────────────────────────────────────────────────
-
-    /** Nom de ville valide (regex + longueur). */
-    public static boolean isValidVilleName(String s) {
-        return s != null && VILLE_NAME.matcher(s).matches();
-    }
 
     /** Nom de balise valide (regex + longueur). */
     public static boolean isValidBaliseName(String s) {
@@ -117,11 +85,6 @@ public final class InputValidator {
     /** Nom de serveur Velocity — aucun caractère spécial autorisé. */
     public static boolean isValidServerName(String s) {
         return s != null && SERVER_NAME_PATTERN.matcher(s).matches();
-    }
-
-    /** Action ville : doit figurer dans la whitelist {@code VALID_ACTIONS}. */
-    public static boolean isValidAction(String s) {
-        return s != null && VALID_ACTIONS.contains(s);
     }
 
     /** Texte court de profil RP (nom, prénom, ancienne ville, métier). */
@@ -144,16 +107,6 @@ public final class InputValidator {
         return s != null && VALID_SEXES.contains(s.trim());
     }
 
-    /** Grade ville : "Membre", "Adjoint" ou "Chef" uniquement. */
-    public static boolean isValidGrade(String s) {
-        return s != null && VALID_GRADES.contains(s);
-    }
-
-    /** Mode de recrutement : "ouvert", "sur_demande" ou "ferme" uniquement. */
-    public static boolean isValidRecrutement(String s) {
-        return s != null && VALID_REC.contains(s);
-    }
-
     /**
      * Montant financier valide :
      * – fini (pas NaN, pas ±Infinity)
@@ -171,14 +124,6 @@ public final class InputValidator {
      */
     public static double roundMontant(double v) {
         return Math.round(v * 100.0) / 100.0;
-    }
-
-    /**
-     * Vérifie qu'un villeId est structurellement valide (> 0).
-     * Ne garantit pas l'existence en base — à combiner avec VilleStore.
-     */
-    public static boolean isValidVilleId(int id) {
-        return id > 0;
     }
 
     /** Nombre de paliers de récompense temps de jeu (30 min, 2 h, 4 h). */

@@ -107,10 +107,10 @@ public class RecompenseScreen extends BaseMenuScreen {
             renderPlaytimeCard(gfx, mouseX, mouseY, cardX(i), cardY(0), i, p, temps);
         }
 
-        // Ligne 2 — VOTE VILLE | VOTE SERVEUR (À venir) | EXPLORATION
-        renderVoteVilleCard(gfx, mouseX, mouseY, cardX(0), cardY(1));
+        // Ligne 2 — EXPLORATION | VOTE SERVEUR (À venir) | À venir
+        renderExplorationCard(gfx, mouseX, mouseY, cardX(0), cardY(1));
         renderAVenirCard(gfx, cardX(1), cardY(1), "VOTE SERVEUR", "Vote pour le serveur");
-        renderExplorationCard(gfx, mouseX, mouseY, cardX(2), cardY(1));
+        renderAVenirCard(gfx, cardX(2), cardY(1), "À VENIR", "Bientôt disponible");
     }
 
     // ── Carte play time ───────────────────────────────────────────────────
@@ -179,62 +179,6 @@ public class RecompenseScreen extends BaseMenuScreen {
             gfx.drawCenteredString(font,
                     "§7" + formatDuree(temps) + " §8/ §7" + formatDuree(p.seuilSecondes()),
                     cx, ty, C_GREY);
-        }
-    }
-
-    // ── Carte VOTE VILLE ─────────────────────────────────────────────────
-
-    private void renderVoteVilleCard(GuiGraphics gfx, int mouseX, int mouseY, int x, int y) {
-        int w = cardW(), h = cardH();
-        boolean loaded = RecompensesDataManager.isLoaded();
-        boolean aVote  = RecompensesDataManager.isVoteVilleEffectue();
-        boolean hov    = !aVote && loaded
-                && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-
-        int bg = aVote ? C_CARD_BG : (hov ? C_CARD_HOV : (loaded ? C_CARD_SEL : C_CARD_BG));
-        GuiUtils.fillChamferedRect(gfx, x, y, w, h, 5, bg);
-        if (loaded && !aVote) {
-            GuiUtils.drawChamferedBorder(gfx, x - 2, y - 2, w + 4, h + 4, 7, 1, 0x252ECC60);
-            GuiUtils.drawChamferedBorder(gfx, x - 1, y - 1, w + 2, h + 2, 6, 1, 0x552ECC60);
-            GuiUtils.drawNeonEdge(gfx, x, y, w, h, 4);
-        } else {
-            GuiUtils.drawChamferedBorder(gfx, x, y, w, h, 5, 1, aVote ? C_BORDER : 0xFF1E3028);
-        }
-        GuiUtils.drawCornerBrackets(gfx, x, y, w, h, 5, 4, 1,
-                (loaded && !aVote) ? 0xCC3DDE6A : 0x553DDE6A);
-
-        int cx = x + w / 2;
-        int ty = y + 8;
-
-        int titleColor = !loaded ? C_GREY : (aVote ? C_GREY : C_TITLE_HOT);
-        gfx.drawCenteredString(font, Component.literal("VOTE VILLE")
-                .withStyle(ChatFormatting.BOLD), cx, ty, titleColor);
-        ty += font.lineHeight + 2;
-        gfx.drawCenteredString(font, "§7Vote quotidien", cx, ty, C_GREY);
-        ty += font.lineHeight + 3;
-
-        double montant = RecompensesDataManager.getMontantVoteVille();
-        String montantStr = montant > 0 ? "+" + Money.entier(montant) : "+...";
-        gfx.drawCenteredString(font, Component.literal(montantStr)
-                .withStyle(ChatFormatting.BOLD), cx, ty, aVote ? C_GREY : C_GOLD);
-        ty += font.lineHeight + 5;
-
-        gfx.fill(x + 8, ty, x + w - 8, ty + 1, (loaded && !aVote) ? 0x553DDE6A : 0x221E2D3D);
-        ty += 6;
-
-        if (!loaded) {
-            gfx.drawCenteredString(font, "§8Chargement...", cx, ty + 4, C_GREY);
-        } else if (aVote) {
-            gfx.drawCenteredString(font, "§a✔ Voté", cx, ty, 0xFF55FF55);
-            String villeVotee = RecompensesDataManager.getVilleVoteeNom();
-            if (!villeVotee.isEmpty()) {
-                ty += font.lineHeight + 3;
-                gfx.drawCenteredString(font, "§7" + villeVotee, cx, ty, C_GREY);
-            }
-        } else {
-            gfx.drawCenteredString(font, Component.literal(hov ? "» VOTER «" : "VOTER ▶")
-                    .withStyle(ChatFormatting.BOLD), cx, ty + 4,
-                    hov ? 0xFF90FFB8 : C_TITLE_HOT);
         }
     }
 
@@ -350,19 +294,10 @@ public class RecompenseScreen extends BaseMenuScreen {
                 }
             }
 
-            // ── Carte VOTE VILLE ──────────────────────────────────────────
-            if (RecompensesDataManager.isLoaded() && !RecompensesDataManager.isVoteVilleEffectue()) {
-                int vx = cardX(0), vy = cardY(1);
-                if (mx >= vx && mx < vx + cardW() && my >= vy && my < vy + cardH()) {
-                    minecraft.setScreen(new VoteVilleScreen());
-                    return true;
-                }
-            }
-
             // ── Carte EXPLORATION ─────────────────────────────────────────
             if (RecompensesDataManager.isLoaded() && !RecompensesDataManager.isExplorationRecue()
                     && RecompensesDataManager.getBlocsParcourus() >= RecompensesDataManager.getSeuilBlocs()) {
-                int ex = cardX(2), ey = cardY(1);
+                int ex = cardX(0), ey = cardY(1);
                 if (mx >= ex && mx < ex + cardW() && my >= ey && my < ey + cardH()) {
                     if (now - lastExploClaimMs > CLAIM_DEBOUNCE_MS && minecraft.getConnection() != null) {
                         lastExploClaimMs = now;

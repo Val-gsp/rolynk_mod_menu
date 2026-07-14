@@ -4,7 +4,6 @@ import com.example.rolynkmodmenu.network.ExplorationClaimPayload;
 import com.example.rolynkmodmenu.network.RecompenseClaimPayload;
 import com.example.rolynkmodmenu.network.RecompensesPayload;
 import com.example.rolynkmodmenu.network.RecompensesRequestPayload;
-import com.example.rolynkmodmenu.network.VoteVilleActionPayload;
 import com.example.rolynkmodmenu.util.Money;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
@@ -39,12 +38,10 @@ public final class ServerRecompenseHandler {
 
     private static final long REQUEST_CD_MS = 2_000L;
     private static final long CLAIM_CD_MS   =   750L;
-    private static final long VOTE_CD_MS    = 2_000L;
     private static final long EXPLO_CD_MS   =   750L;
 
     private static final ConcurrentHashMap<UUID, Long> REQUEST_CD = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<UUID, Long> CLAIM_CD   = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<UUID, Long> VOTE_CD    = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<UUID, Long> EXPLO_CD   = new ConcurrentHashMap<>();
 
     private static boolean throttle(ConcurrentHashMap<UUID, Long> map, UUID uuid, long cdMs) {
@@ -70,7 +67,6 @@ public final class ServerRecompenseHandler {
     public static void onPlayerLogout(UUID uuid) {
         REQUEST_CD.remove(uuid);
         CLAIM_CD.remove(uuid);
-        VOTE_CD.remove(uuid);
         EXPLO_CD.remove(uuid);
     }
 
@@ -158,34 +154,6 @@ public final class ServerRecompenseHandler {
         };
     }
 
-    // ── VoteVilleActionPayload ────────────────────────────────────────────
-
-    public static void onVoter(VoteVilleActionPayload payload, IPayloadContext ctx) {
-        if (!(ctx.player() instanceof ServerPlayer sp)) return;
-        if (throttle(VOTE_CD, sp.getUUID(), VOTE_CD_MS)) return;
-        if (rejectIfLobby(sp, ctx)) return;
-
-        int villeId = payload.villeId();
-        String uuid = sp.getStringUUID();
-
-        if (!InputValidator.isValidVilleId(villeId)) {
-            LOGGER.warn("[Security] VoteVilleAction: {} a envoyé un villeId invalide {}", uuid, villeId);
-            return;
-        }
-
-        CompletableFuture.runAsync(() -> {
-            double montant = RolynkConfig.recompenseVoteVille();
-            String err = VoteVilleStore.voter(uuid, villeId, montant);
-            if (err == null) ServerProfileHandler.invalidateCache(uuid); // argent crédité
-
-            ctx.enqueueWork(() -> sp.sendSystemMessage(Component.literal(
-                    err == null
-                            ? "§aVote enregistré ! §e+" + Money.entier(montant) + " §a!"
-                            : err)));
-            sendEtat(sp);
-        }, Database.EXECUTOR);
-    }
-
     // ── ExplorationClaimPayload ───────────────────────────────────────────
 
     public static void onExplorationClaim(ExplorationClaimPayload payload, IPayloadContext ctx) {
@@ -214,15 +182,13 @@ public final class ServerRecompenseHandler {
     // ── Envoi de l'état ───────────────────────────────────────────────────
 
     /**
-     * Lit l'état complet du jour (play time + vote ville + exploration) et l'envoie.
+     * Lit l'état complet du jour (play time + exploration) et l'envoie.
      * BLOQUANT — Database.EXECUTOR uniquement.
      */
     static void sendEtat(ServerPlayer sp) {
         String uuid = sp.getStringUUID();
 
         RecompenseStore.EtatJour          etat       = RecompenseStore.getEtat(uuid);
-        VoteVilleStore.EtatVote           etatVote   = VoteVilleStore.getEtat(uuid);
-        String                            maVilleNom = VoteVilleStore.getVilleJoueur(uuid);
         ExplorationStore.EtatExploration  etatExplo  = ExplorationStore.getEtat(uuid);
 
         List<RecompensesPayload.PalierEntry> paliers = new ArrayList<>(RecompenseStore.NB_PALIERS);
@@ -236,10 +202,6 @@ public final class ServerRecompenseHandler {
         RecompensesPayload out = new RecompensesPayload(
                 etat.tempsSecondes(),
                 paliers,
-                etatVote.aVoteAujourdhui(),
-                etatVote.nomVilleVotee(),
-                maVilleNom,
-                RolynkConfig.recompenseVoteVille(),
                 etatExplo.blocsParcourus(),
                 etatExplo.recompenseRecue(),
                 RolynkConfig.explorationSeuilBlocs(),

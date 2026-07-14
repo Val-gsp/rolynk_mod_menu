@@ -52,35 +52,6 @@ public final class RecompensesDataManager {
         return d.tempsJeuSecondes() + (int) extra;
     }
 
-    // ── Vote ville ────────────────────────────────────────────────────────
-
-    /** {@code true} si le joueur a déjà voté pour une ville aujourd'hui. */
-    public static boolean isVoteVilleEffectue() {
-        RecompensesPayload d = data;
-        return d != null && d.voteVilleEffectue();
-    }
-
-    /** Nom de la ville votée aujourd'hui, "" si le joueur n'a pas encore voté. */
-    public static String getVilleVoteeNom() {
-        RecompensesPayload d = data;
-        return d == null ? "" : d.villeVoteeNom();
-    }
-
-    /**
-     * Nom de la ville dont le joueur est membre, "" s'il est sans ville.
-     * Utilisé par VoteVilleScreen pour griser la propre ville du joueur.
-     */
-    public static String getMaVilleNom() {
-        RecompensesPayload d = data;
-        return d == null ? "" : d.maVilleNom();
-    }
-
-    /** Montant de la récompense vote de ville (config serveur). */
-    public static double getMontantVoteVille() {
-        RecompensesPayload d = data;
-        return d == null ? 0 : d.montantVoteVille();
-    }
-
     // ── Exploration ───────────────────────────────────────────────────────
 
     /**

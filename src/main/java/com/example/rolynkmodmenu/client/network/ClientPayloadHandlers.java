@@ -7,8 +7,6 @@ import com.example.rolynkmodmenu.client.profile.ProfileDataManager;
 import com.example.rolynkmodmenu.client.profile.ProfilJoueurDataManager;
 import com.example.rolynkmodmenu.client.profile.ProfilRpDataManager;
 import com.example.rolynkmodmenu.client.recompense.RecompensesDataManager;
-import com.example.rolynkmodmenu.client.screen.ville.GestionVilleScreen;
-import com.example.rolynkmodmenu.client.ville.*;
 import com.example.rolynkmodmenu.network.*;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -108,38 +106,6 @@ public final class ClientPayloadHandlers {
         ctx.enqueueWork(() -> RecompensesDataManager.set(payload));
     }
 
-    // ── Villes ────────────────────────────────────────────────────────────
-
-    public static void onVilleList(VilleListPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> VilleListDataManager.setVilles(payload.entries()));
-    }
-
-    public static void onVilleMembres(VilleMembresPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() ->
-                VilleMembresDataManager.set(payload.membres(), payload.myGrade(), payload.playerMoney()));
-    }
-
-    public static void onVilleActionResult(VilleActionResultPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            // Met à jour la money personnelle si le serveur l'a renvoyée
-            if (payload.newPlayerMoney() >= 0)
-                VilleMembresDataManager.setPlayerMoney(payload.newPlayerMoney());
-            if (GestionVilleScreen.current != null)
-                GestionVilleScreen.current.handleActionResult(payload);
-        });
-    }
-
-    public static void onVilleLogs(VilleLogsBanquePayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> VilleLogsBanqueDataManager.setLogs(payload.entries()));
-    }
-
-    public static void onVilleDemandes(VilleDemandesPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> VilleDemandesDataManager.setDemandes(payload.demandes()));
-    }
-
-    public static void onVilleProfile(VilleProfilePayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> VilleProfileDataManager.setVilleNom(payload.villeNom()));
-    }
 
     // ── Boutique ──────────────────────────────────────────────────────────
 

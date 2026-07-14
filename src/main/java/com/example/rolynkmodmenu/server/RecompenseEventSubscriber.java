@@ -45,7 +45,6 @@ public final class RecompenseEventSubscriber {
     public static void onServerStarting(ServerStartingEvent event) {
         if (!Database.isReady()) return;
         CompletableFuture.runAsync(RecompenseStore::purgerAnciennes, Database.EXECUTOR);
-        CompletableFuture.runAsync(VoteVilleStore::purgerAnciens, Database.EXECUTOR);
         CompletableFuture.runAsync(ExplorationStore::purgerAnciennes, Database.EXECUTOR);
     }
 

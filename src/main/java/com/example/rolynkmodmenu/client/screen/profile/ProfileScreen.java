@@ -129,16 +129,12 @@ public class ProfileScreen extends BaseMenuScreen {
         String displayPseudo = or(ProfileDataManager.getPseudo(), localPseudo);
         String displayStatus = or(ProfileDataManager.getStatus(), localStatus);
 
-        String[] labels = {"STATUS", "PSEUDO", "GRADE", "VILLE", "MONEY", "CRISTAUX",
+        String[] labels = {"STATUS", "PSEUDO", "GRADE", "MONEY", "CRISTAUX",
                            "HEURES DE JEU", "CONNEXION", "UUID"};
-        String villeNom = ProfileDataManager.getVilleNom();
-        String displayVille = (villeNom != null && !villeNom.isEmpty())
-                ? villeNom : "§7Aucune";
         String[] values = {
                 displayStatus,
                 displayPseudo,
                 gradeLabel(GradeCache.getMonGrade()),
-                orLoading(displayVille.equals("§7Aucune") ? displayVille : villeNom),
                 orLoading(formatMoney(ProfileDataManager.getMoney())),
                 orLoading(formatCristaux(ProfileDataManager.getCristaux())),
                 orLoading(ProfileDataManager.getHeuresDeJeu()),
@@ -149,7 +145,6 @@ public class ProfileScreen extends BaseMenuScreen {
                 statusColor(displayStatus),
                 C_VALUE,
                 gradeColor(GradeCache.getMonGrade()),
-                (villeNom != null && !villeNom.isEmpty()) ? C_VILLE : C_LABEL,
                 C_VALUE, C_CRISTAUX, C_VALUE, C_VALUE, C_LABEL
         };
 
