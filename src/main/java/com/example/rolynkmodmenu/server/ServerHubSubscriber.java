@@ -83,7 +83,6 @@ public final class ServerHubSubscriber {
         ServerSkinHandler.onPlayerLogout(sp.getUUID());
         ServerBaliseHandler.onPlayerLogout(sp.getUUID());
         ServerRecompenseHandler.onPlayerLogout(sp.getUUID());
-        ServerBoutiqueHandler.onPlayerLogout(sp.getUUID());
         ServerTradeHandler.onPlayerLogout(sp.getUUID());
 
         Long loginTime = LOGIN_TIMES.remove(uuid);

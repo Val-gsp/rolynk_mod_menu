@@ -134,11 +134,6 @@ public final class InputValidator {
         return palier >= 0 && palier < NB_PALIERS_RECOMPENSE;
     }
 
-    /** Offre de la Boutique Jeux : index existant dans le catalogue serveur. */
-    public static boolean isValidOffreBoutique(int offreId) {
-        return BoutiqueConfig.offre(offreId) != null;
-    }
-
     /** Pseudo Minecraft structurellement valide (3-16 caractères [a-zA-Z0-9_]). */
     public static boolean isValidPseudo(String s) {
         return s != null && s.matches("[a-zA-Z0-9_]{3,16}");

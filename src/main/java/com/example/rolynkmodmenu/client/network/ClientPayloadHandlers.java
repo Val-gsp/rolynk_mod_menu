@@ -1,7 +1,6 @@
 package com.example.rolynkmodmenu.client.network;
 
 import com.example.rolynkmodmenu.client.balise.BaliseDataManager;
-import com.example.rolynkmodmenu.client.boutique.BoutiqueDataManager;
 import com.example.rolynkmodmenu.client.grade.GradeCache;
 import com.example.rolynkmodmenu.client.profile.ProfileDataManager;
 import com.example.rolynkmodmenu.client.profile.ProfilJoueurDataManager;
@@ -104,13 +103,6 @@ public final class ClientPayloadHandlers {
 
     public static void onRecompenses(RecompensesPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> RecompensesDataManager.set(payload));
-    }
-
-
-    // ── Boutique ──────────────────────────────────────────────────────────
-
-    public static void onBoutiqueCatalog(BoutiqueCatalogPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> BoutiqueDataManager.set(payload.offres()));
     }
 
     // ── Trade ─────────────────────────────────────────────────────────────

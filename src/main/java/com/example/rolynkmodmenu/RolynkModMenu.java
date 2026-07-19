@@ -3,7 +3,6 @@ package com.example.rolynkmodmenu;
 import com.example.rolynkmodmenu.client.network.ClientPayloadHandlers;
 import com.example.rolynkmodmenu.network.*;
 import com.example.rolynkmodmenu.server.ServerBaliseHandler;
-import com.example.rolynkmodmenu.server.ServerBoutiqueHandler;
 import com.example.rolynkmodmenu.server.ServerTradeHandler;
 import com.example.rolynkmodmenu.server.ServerProfilRpHandler;
 import com.example.rolynkmodmenu.server.ServerProfileHandler;
@@ -99,17 +98,6 @@ public class RolynkModMenu {
         registrar.playToClient(RecompensesPayload.TYPE,
                 RecompensesPayload.STREAM_CODEC,
                 ClientPayloadHandlers::onRecompenses);
-
-        // ── Boutique Jeux ─────────────────────────────────────────────────
-        registrar.playToServer(BoutiqueCatalogRequestPayload.TYPE,
-                BoutiqueCatalogRequestPayload.STREAM_CODEC,
-                ServerBoutiqueHandler::onCatalogRequest);
-        registrar.playToServer(BoutiqueVendrePayload.TYPE,
-                BoutiqueVendrePayload.STREAM_CODEC,
-                ServerBoutiqueHandler::onVendre);
-        registrar.playToClient(BoutiqueCatalogPayload.TYPE,
-                BoutiqueCatalogPayload.STREAM_CODEC,
-                ClientPayloadHandlers::onBoutiqueCatalog);
 
         // ── Trade — C2S ───────────────────────────────────────────────────
         registrar.playToServer(TradeListRequestPayload.TYPE,
