@@ -29,6 +29,8 @@ import java.util.List;
  */
 public class TradeScreen extends BaseMenuScreen {
 
+    @Override protected boolean showNavIcons() { return false; }
+
     // ── Couleurs (charte Rolynk) ──────────────────────────────────────────
     private static final int C_BORDER   = 0xFF1E2D3D;
     private static final int C_PANEL    = 0xFF141C26;

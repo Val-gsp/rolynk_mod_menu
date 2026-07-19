@@ -37,6 +37,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SkinScreen extends BaseMenuScreen {
 
+    @Override protected net.minecraft.client.gui.screens.Screen backTarget() { return new ProfileScreen(); }
+
     private static final int C_INFO_BG = 0xFF141C26;
     private static final int C_BORDER  = 0xFF1E2D3D;
     private static final int C_LABEL   = 0xFF607080;

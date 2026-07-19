@@ -18,6 +18,8 @@ public class BoutiqueCategorieScreen extends BaseMenuScreen {
         this.categorie = categorie;
     }
 
+    @Override protected net.minecraft.client.gui.screens.Screen backTarget() { return new BoutiqueScreen(); }
+
     @Override
     protected void initContent() { }
 

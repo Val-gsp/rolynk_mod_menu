@@ -39,6 +39,8 @@ public class MainMenuScreen extends BaseMenuScreen {
 
     public MainMenuScreen() { super("MENU"); }
 
+    @Override protected boolean showNavIcons() { return false; }
+
     // ── Contenu ──────────────────────────────────────────────────────────────
 
     @Override

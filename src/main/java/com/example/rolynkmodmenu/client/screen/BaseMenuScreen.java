@@ -1,7 +1,9 @@
 package com.example.rolynkmodmenu.client.screen;
 
 import com.example.rolynkmodmenu.client.HenuIcons;
+import com.example.rolynkmodmenu.client.screen.main_menu.MainMenuScreen;
 import com.example.rolynkmodmenu.client.screen.main_menu.widget.MenuButton;
+import com.example.rolynkmodmenu.client.screen.main_menu.widget.NavIconButton;
 import com.example.rolynkmodmenu.client.util.GuiUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -94,10 +96,31 @@ public abstract class BaseMenuScreen extends Screen {
         }
     }
 
+    // ── Navigation (icônes retour/maison sous le header, à droite) ────────────
+
+    /** Écran ouvert par l'icône retour. Par défaut : le menu principal. */
+    protected net.minecraft.client.gui.screens.Screen backTarget() { return new MainMenuScreen(); }
+
+    /** Certaines fenêtres masquent les icônes (menu principal, flux forcés). */
+    protected boolean showNavIcons() { return true; }
+
+    private void addNavIcons() {
+        int homeX = panelX() + panelW() - PADDING - 13;
+        int backX = homeX - 19;
+        int y = panelY() + HEADER_H - 4;
+        addRenderableWidget(new NavIconButton(backX, y, NavIconButton.ICON_BACK, "Retour",
+                () -> minecraft.setScreen(backTarget())));
+        addRenderableWidget(new NavIconButton(homeX, y, NavIconButton.ICON_HOME, "Menu principal",
+                () -> minecraft.setScreen(new MainMenuScreen())));
+    }
+
     // ── Cycle de vie ──────────────────────────────────────────────────────────
 
     @Override
-    public final void init() { initContent(); }
+    public final void init() {
+        if (showNavIcons()) addNavIcons();
+        initContent();
+    }
 
     /** Ajouter les widgets ici via addButtonGrid() ou addRenderableWidget(). */
     protected abstract void initContent();

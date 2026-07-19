@@ -20,6 +20,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
  */
 public class CreationProfilScreen extends BaseMenuScreen {
 
+    @Override protected boolean showNavIcons() { return false; }
+
     // ── Couleurs (identiques à ProfileScreen) ─────────────────────────────
     private static final int C_INFO_BG  = 0xFF141C26;
     private static final int C_BORDER   = 0xFF1E2D3D;

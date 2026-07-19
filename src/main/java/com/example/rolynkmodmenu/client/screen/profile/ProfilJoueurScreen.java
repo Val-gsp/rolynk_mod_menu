@@ -19,6 +19,8 @@ import java.util.UUID;
 
 public class ProfilJoueurScreen extends BaseMenuScreen {
 
+    @Override protected net.minecraft.client.gui.screens.Screen backTarget() { return new ProfileScreen(); }
+
     // ── Couleurs ──────────────────────────────────────────────────────────
     private static final int C_INFO_BG   = 0xFF141C26;
     private static final int C_BORDER    = 0xFF1E2D3D;
