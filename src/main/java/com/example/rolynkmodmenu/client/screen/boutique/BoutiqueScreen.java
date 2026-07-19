@@ -56,9 +56,16 @@ public class BoutiqueScreen extends BaseMenuScreen {
             int bx  = px + PADDING + col * (bw + BTN_GAP);
             int by  = gridY + row * (bh + BTN_GAP);
             final String categorie = LABELS[i];
+            // PETS ouvre le catalogue RolynkRP (section Pets) s'il est présent —
+            // plus besoin du F8. Mod absent → écran « à venir » comme les autres.
+            Runnable action = "PETS".equals(categorie)
+                    ? () -> {
+                        if (!com.example.rolynkmodmenu.client.boutique.CatalogueIntegration.openSection("Pets"))
+                            minecraft.setScreen(new BoutiqueCategorieScreen(categorie));
+                    }
+                    : () -> minecraft.setScreen(new BoutiqueCategorieScreen(categorie));
             addRenderableWidget(new MenuButton(bx, by, bw, bh,
-                    LABELS[i], SUBTITLES[i], ICONS[i],
-                    () -> minecraft.setScreen(new BoutiqueCategorieScreen(categorie))));
+                    LABELS[i], SUBTITLES[i], ICONS[i], action));
         }
     }
 
