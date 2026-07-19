@@ -31,6 +31,8 @@ public class RolynkModMenu {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public RolynkModMenu(IEventBus modEventBus) {
+        com.example.rolynkmodmenu.item.ModItems.ITEMS.register(modEventBus);
+        com.example.rolynkmodmenu.item.ModCreativeTabs.TABS.register(modEventBus);
         LOGGER.info("[RolynkModMenu] Initialisation...");
         modEventBus.addListener(RolynkModMenu::registerPayloads);
     }
