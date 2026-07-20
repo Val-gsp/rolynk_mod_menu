@@ -3,8 +3,8 @@ package com.example.rolynkmodmenu.client.screen.boutique;
 import com.example.rolynkmodmenu.client.screen.BaseMenuScreen;
 import com.example.rolynkmodmenu.client.screen.main_menu.MainMenuScreen;
 import com.example.rolynkmodmenu.client.screen.main_menu.widget.MenuButton;
+import com.example.rolynkmodmenu.item.ModItems;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * Fenêtre Boutique — MENU > BOUTIQUE
@@ -20,24 +20,24 @@ public class BoutiqueScreen extends BaseMenuScreen {
 
     // ── Données boutons ──────────────────────────────────────────────────────
     private static final String[] LABELS = {
-        "GRADES", "COSMÉTIQUES", "PETS",
-        "BOOSTERS", "CAISSES", "DIVERS"
+        "GRADES", "KIT", "COSMÉTIQUES",
+        "PETS", "PELUCHE", "MEUBLE"
     };
     private static final String[] SUBTITLES = {
         "Monte en grade sur le serveur",
+        "Kits d'objets à débloquer",
         "Skins, titres et effets exclusifs",
         "Compagnons et montures",
-        "Multiplicateurs et bonus",
-        "Caisses et clés à ouvrir",
-        "Tout le reste de la boutique"
+        "Peluches exclusives à collectionner",
+        "Meubles et décorations premium"
     };
     private static final ItemStack[] ICONS = {
-        new ItemStack(Items.EXPERIENCE_BOTTLE),
-        new ItemStack(Items.LEATHER_CHESTPLATE),
-        new ItemStack(Items.BONE),
-        new ItemStack(Items.FIREWORK_ROCKET),
-        new ItemStack(Items.CHEST),
-        new ItemStack(Items.EMERALD)
+        new ItemStack(ModItems.GRADE.get()),
+        new ItemStack(ModItems.KIT.get()),
+        new ItemStack(ModItems.COSMETIQUE.get()),
+        new ItemStack(ModItems.PETS.get()),
+        new ItemStack(ModItems.PELUCHE.get()),
+        new ItemStack(ModItems.MEUBLE.get())
     };
 
     public BoutiqueScreen() { super("MENU", "BOUTIQUE"); }

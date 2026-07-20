@@ -82,15 +82,15 @@ public class MenuButton extends AbstractButton {
         // Coins décoratifs (bracket corners) — top-left et top-right
         drawCornerBrackets(gfx, x, y, w, h, hov);
 
-        // Icône item (2× — 32×32) centrée dans la moitié haute
+        // Icône item (2× — 32×32) centrée dans la moitié haute.
         if (icon != null) {
-            float scale  = 2.0f;
-            int   iconPx = (int)(16 * scale);
+            int   iconPx = (int)(16 * 2.0f);
             int   iconX  = x + (w - iconPx) / 2;
             int   iconY  = y + (h / 2 - iconPx) / 2 + 4;
+
             gfx.pose().pushPose();
             gfx.pose().translate(iconX, iconY, 0);
-            gfx.pose().scale(scale, scale, scale);
+            gfx.pose().scale(2.0f, 2.0f, 2.0f);
             gfx.renderItem(icon, 0, 0);
             gfx.pose().popPose();
         }
